@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
-	appErr "github.com/enneket/amap/errors"
+	amapErr "github.com/enneket/amap/errors"
 	geoCode "github.com/enneket/amap/geo_code"
-	appType "github.com/enneket/amap/types"
+	reGeoCode "github.com/enneket/amap/re_geo_code"
+	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
 )
 
@@ -22,7 +24,7 @@ type Client struct {
 // NewClient 创建客户端实例（校验配置合法性）
 func NewClient(cfg *Config) (*Client, error) {
 	if cfg.Key == "" {
-		return nil, appErr.NewInvalidConfigError("API Key 不能为空")
+		return nil, amapErr.NewInvalidConfigError("API Key 不能为空")
 	}
 	// 初始化 HTTP 客户端（支持超时、代理）
 	httpClient := &http.Client{Timeout: cfg.Timeout}
@@ -48,17 +50,17 @@ func (c *Client) DoRequest(path string, params map[string]string, resp interface
 	req.Header.Set("User-Agent", c.config.UserAgent)
 	rawResp, err := c.httpClient.Do(req)
 	if err != nil {
-		return appErr.NewNetworkError(err.Error())
+		return amapErr.NewNetworkError(err.Error())
 	}
 	defer rawResp.Body.Close()
 	// 5. 解析响应（先解析基础响应，再解析业务响应）
-	var baseResp appType.BaseResponse
-	if err := json.NewDecoder(rawResp.Body).Decode(&baseResp); err != nil {
-		return appErr.NewParseError("响应解析失败: " + err.Error())
+	baseResp, _, err := amapType.ReadBaseResponse(rawResp.Body)
+	if err != nil {
+		return err
 	}
 	// 6. 校验 API 错误
 	if baseResp.Status != "1" {
-		return appErr.NewAPIError(baseResp.InfoCode, baseResp.Info)
+		return amapErr.NewAPIError(baseResp.InfoCode, baseResp.Info)
 	}
 	// 7. 解析到业务响应结构体
 	return json.Unmarshal(baseResp.RawJSON, resp)
@@ -84,7 +86,7 @@ func (c *Client) buildPublicParams(params map[string]string) map[string]string {
 func (c *Client) GeoCode(req *geoCode.GeocodeRequest) (*geoCode.GeoCodeResponse, error) {
 	// 校验必填参数
 	if req.Address == "" {
-		return nil, appErr.NewInvalidConfigError("地理编码：address参数不能为空")
+		return nil, amapErr.NewInvalidConfigError("地理编码：address参数不能为空")
 	}
 
 	// 转换请求参数为map
@@ -93,6 +95,37 @@ func (c *Client) GeoCode(req *geoCode.GeocodeRequest) (*geoCode.GeoCodeResponse,
 	// 调用核心请求方法
 	var resp geoCode.GeoCodeResponse
 	if err := c.DoRequest("geocode/geo", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// ReGeocode 逆地理编码API调用方法
+func (c *Client) ReGeocode(req *reGeoCode.ReGeocodeRequest) (*reGeoCode.ReGeocodeResponse, error) {
+	// 校验必填参数
+	if req.Location == "" {
+		return nil, amapErr.NewInvalidConfigError("逆地理编码：location参数不能为空")
+	}
+	// 简单校验经纬度格式（经度,纬度）
+	if !strings.Contains(req.Location, ",") {
+		return nil, amapErr.NewInvalidConfigError("逆地理编码：location格式错误，应为\"经度,纬度\"")
+	}
+
+	// 处理默认值
+	if req.Radius <= 0 {
+		req.Radius = 1000 // 默认搜索半径1000米
+	}
+	if req.Extensions == "" {
+		req.Extensions = "base" // 默认返回基础信息
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp reGeoCode.ReGeocodeResponse
+	if err := c.DoRequest("geocode/regeo", params, &resp); err != nil {
 		return nil, err
 	}
 

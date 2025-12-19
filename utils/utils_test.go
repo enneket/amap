@@ -14,7 +14,7 @@ func TestSign(t *testing.T) {
 		"empty":     "", // 空值应被过滤
 	}
 	securityKey := "testsecuritykey"
-	expected := "E8B75885687145819A9D88C99A8E9F87" // 示例值，需替换为实际计算结果
+	expected := "57799C38F8A41BD325E127C3F110FC6C" // 实际计算结果
 
 	sig := Sign(params, securityKey)
 	if sig != expected {
