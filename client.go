@@ -24,6 +24,7 @@ import (
 distance "github.com/enneket/amap/api/distance"
 district "github.com/enneket/amap/api/district"
 geoCode "github.com/enneket/amap/api/geo_code"
+ipconfig "github.com/enneket/amap/api/ipconfig"
 reGeoCode "github.com/enneket/amap/api/re_geo_code"
 trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	amapErr "github.com/enneket/amap/errors"
@@ -434,6 +435,26 @@ func (c *Client) TrafficIncident(req *trafficIncident.TrafficIncidentRequest) (*
 	// 调用核心请求方法
 	var resp trafficIncident.TrafficIncidentResponse
 	if err := c.DoRequest("traffic/status", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// IPConfig IP定位API调用方法
+// 支持通过IP地址查询地理位置信息，返回省份、城市、区县、ISP等信息
+func (c *Client) IPConfig(req *ipconfig.IPConfigRequest) (*ipconfig.IPConfigResponse, error) {
+	// 校验必填参数
+	if req.IP == "" {
+		return nil, amapErr.NewInvalidConfigError("IP定位：ip参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp ipconfig.IPConfigResponse
+	if err := c.DoRequest("ip", params, &resp); err != nil {
 		return nil, err
 	}
 
