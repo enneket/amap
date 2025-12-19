@@ -1,0 +1,118 @@
+# ===================== 基础核心（同通用版） =====================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+*.app
+obj/
+_obj/
+bin/
+dist/
+build/
+tmp/
+go.work
+go.work.sum
+/pkg/
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+cgo/
+*.test
+coverage.out
+coverage.html
+coverage.xml
+*.prof
+*.trace
+.DS_Store
+Thumbs.db
+*~
+
+# ===================== IDE/编辑器配置 =====================
+# VSCode
+.vscode/
+*.code-workspace
+.settings/
+.project
+.classpath
+
+# GoLand/IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Vim
+*.swp
+*.swo
+.un~
+.session.vim
+.netrwhist
+
+# Emacs
+*#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list/
+tramp/
+.//.#*
+
+# ===================== 容器/云原生 =====================
+# Docker
+.dockerignore
+.docker/
+docker-compose.override.yml
+*.dockerfile.bak
+
+# Kubernetes
+*.kubeconfig
+*.yaml.bak
+*.yml.bak
+charts/
+charts/
+
+# ===================== 环境/配置 =====================
+# 环境变量文件（敏感信息/本地配置）
+.env
+.env.local
+.env.*.local
+config/local.yaml
+config/dev.yaml
+
+# 日志文件
+*.log
+logs/
+log/
+
+# ===================== CI/CD =====================
+# GitLab CI
+.gitlab-ci-local/
+
+# GitHub Actions
+.act/
+.github/workflows/*.bak
+
+# Jenkins
+jenkinsfile.bak
+.jenkins/
+
+# ===================== 其他工具 =====================
+# Git 本身
+.gitattributes
+.gitignore.bak
+.git/
+
+# 压缩包
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# 文档生成
+docs/_build/
+docs/.venv/
