@@ -27,6 +27,7 @@ geoCode "github.com/enneket/amap/api/geo_code"
 grasproad "github.com/enneket/amap/api/grasproad"
 ipconfig "github.com/enneket/amap/api/ipconfig"
 reGeoCode "github.com/enneket/amap/api/re_geo_code"
+search "github.com/enneket/amap/api/search"
 trafficIncident "github.com/enneket/amap/api/traffic-incident"
 convert "github.com/enneket/amap/api/convert"
 	amapErr "github.com/enneket/amap/errors"
@@ -504,6 +505,112 @@ func (c *Client) GraspRoad(req *grasproad.GraspRoadRequest) (*grasproad.GraspRoa
 	// 调用核心请求方法
 	var resp grasproad.GraspRoadResponse
 	if err := c.DoRequest("grasproad", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Search 高级搜索API调用方法
+// 支持关键词搜索、周边搜索、多边形搜索等多种搜索方式
+func (c *Client) Search(req *search.SearchRequest) (*search.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("高级搜索：keyword参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp search.SearchResponse
+	if err := c.DoRequest("place/text", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// AroundSearch 周边搜索API调用方法
+// 基于中心点和半径的搜索，用于查询指定区域内的POI
+func (c *Client) AroundSearch(req *search.AroundSearchRequest) (*search.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("周边搜索：keyword参数不能为空")
+	}
+	if req.Location == "" {
+		return nil, amapErr.NewInvalidConfigError("周边搜索：location参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp search.SearchResponse
+	if err := c.DoRequest("place/around", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PolygonSearch 多边形搜索API调用方法
+// 基于多边形边界的搜索，用于查询指定多边形区域内的POI
+func (c *Client) PolygonSearch(req *search.PolygonSearchRequest) (*search.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("多边形搜索：keyword参数不能为空")
+	}
+	if req.Polygon == "" {
+		return nil, amapErr.NewInvalidConfigError("多边形搜索：polygon参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp search.SearchResponse
+	if err := c.DoRequest("place/polygon", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// IDSearch 根据POI ID查询API调用方法
+// 用于获取指定POI的完整数据
+func (c *Client) IDSearch(req *search.IDRequest) (*search.SearchResponse, error) {
+	// 校验必填参数
+	if req.ID == "" {
+		return nil, amapErr.NewInvalidConfigError("ID查询：id参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp search.SearchResponse
+	if err := c.DoRequest("place/detail", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// AOISearch AOI边界查询API调用方法
+// 用于获取指定AOI（兴趣面）的边界坐标
+func (c *Client) AOISearch(req *search.AOISearchRequest) (*search.SearchResponse, error) {
+	// 校验必填参数（id和location二选一）
+	if req.ID == "" && req.Location == "" {
+		return nil, amapErr.NewInvalidConfigError("AOI边界查询：id和location参数不能同时为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp search.SearchResponse
+	if err := c.DoRequest("place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
 
