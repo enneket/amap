@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	bicycling "github.com/enneket/amap/api/direction/bicycling"
+	driving "github.com/enneket/amap/api/direction/driving"
+	walking "github.com/enneket/amap/api/direction/walking"
+	distance "github.com/enneket/amap/api/distance"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	amapErr "github.com/enneket/amap/errors"
@@ -582,4 +586,722 @@ func TestReGeocode_DefaultValues(t *testing.T) {
 	// 验证默认值
 	assert.Equal(t, "1000", receivedRadius, "默认radius应该为1000")
 	assert.Equal(t, "base", receivedExtensions, "默认extensions应该为base")
+}
+
+// TestDistance_Success 测试Distance方法正常请求成功
+func TestDistance_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回距离测量成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"results": [
+			{
+				"origin_id": "",
+				"dest_id": "",
+				"distance": "3237",
+				"duration": "324",
+				"info": "OK",
+				"status": "1"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &distance.DistanceRequest{
+		Origins:     "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+		Type:        1,
+	}
+
+	// 4. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Len(t, resp.Results, 1)
+	assert.Equal(t, "3237", resp.Results[0].Distance)
+	assert.Equal(t, "324", resp.Results[0].Duration)
+	assert.Equal(t, "OK", resp.Results[0].Info)
+	assert.Equal(t, "1", resp.Results[0].Status)
+}
+
+// TestDistance_MissingOrigins 测试Distance方法缺少必填参数Origins
+func TestDistance_MissingOrigins(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Origins的请求参数
+	req := &distance.DistanceRequest{
+		Destination: "116.410001,39.910113",
+		Type:        1,
+	}
+
+	// 3. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "origins参数不能为空")
+}
+
+// TestDistance_MissingDestination 测试Distance方法缺少必填参数Destination
+func TestDistance_MissingDestination(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Destination的请求参数
+	req := &distance.DistanceRequest{
+		Origins: "116.351147,39.936871",
+		Type:    1,
+	}
+
+	// 3. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "destination参数不能为空")
+}
+
+// TestDistance_InvalidCoordinateFormat 测试Distance方法坐标格式错误
+func TestDistance_InvalidCoordinateFormat(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建格式错误的坐标参数
+	req := &distance.DistanceRequest{
+		Origins:     "116.351147 39.936871", // 使用空格分隔而不是逗号
+		Destination: "116.410001,39.910113",
+		Type:        1,
+	}
+
+	// 3. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "坐标格式错误")
+}
+
+// TestDistance_APIError 测试Distance方法API返回错误
+func TestDistance_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &distance.DistanceRequest{
+		Origins:     "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+		Type:        1,
+	}
+
+	// 4. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestDistance_MultiOriginsDestinations 测试Distance方法多起点多终点情况
+func TestDistance_MultiOriginsDestinations(t *testing.T) {
+	// 1. 创建mock服务器，返回多结果响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"results": [
+			{
+				"origin_id": "",
+				"dest_id": "",
+				"distance": "3237",
+				"duration": "324",
+				"info": "OK",
+				"status": "1"
+			},
+			{
+				"origin_id": "",
+				"dest_id": "",
+				"distance": "8502",
+				"duration": "648",
+				"info": "OK",
+				"status": "1"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用多起点
+	req := &distance.DistanceRequest{
+		Origins:     "116.351147,39.936871|116.481247,39.996746",
+		Destination: "116.410001,39.910113",
+		Type:        2,
+	}
+
+	// 4. 执行距离测量请求
+	resp, err := client.Distance(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Results, 2)
+	assert.Equal(t, "3237", resp.Results[0].Distance)
+	assert.Equal(t, "8502", resp.Results[1].Distance)
+}
+
+// -------------------------- 步行路径规划测试 --------------------------
+
+// TestWalking_Success 测试Walking方法正常请求成功
+func TestWalking_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回步行路径规划成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"route": {
+			"origin": "116.351147,39.936871",
+			"destination": "116.410001,39.910113",
+			"paths": [
+				{
+					"distance": "3237",
+					"duration": "324",
+					"steps": [
+						{
+							"instruction": "步行100米，右转进入建国路",
+							"orientation": "东",
+							"road": "建国路",
+							"distance": "100",
+							"duration": "60",
+							"polyline": "116.351147,39.936871;116.351247,39.936771",
+							"action": "右转",
+							"assistant_action": ""
+						}
+					],
+					"polyline": "116.351147,39.936871;116.351247,39.936771;116.410001,39.910113",
+					"tolls": "0"
+				}
+			],
+			"distance": "3237",
+			"duration": "324",
+			"tolls": "0"
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &walking.WalkingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行步行路径规划请求
+	resp, err := client.Walking(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "116.351147,39.936871", resp.Route.Origin)
+	assert.Equal(t, "116.410001,39.910113", resp.Route.Destination)
+	assert.Equal(t, "3237", resp.Route.Distance)
+	assert.Equal(t, "324", resp.Route.Duration)
+	assert.Equal(t, "0", resp.Route.Tolls)
+	assert.Len(t, resp.Route.Paths, 1)
+	assert.Equal(t, "3237", resp.Route.Paths[0].Distance)
+	assert.Equal(t, "324", resp.Route.Paths[0].Duration)
+	assert.Len(t, resp.Route.Paths[0].Steps, 1)
+	assert.Equal(t, "步行100米，右转进入建国路", resp.Route.Paths[0].Steps[0].Instruction)
+}
+
+// TestWalking_MissingOrigin 测试Walking方法缺少必填参数Origin
+func TestWalking_MissingOrigin(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Origin的请求参数
+	req := &walking.WalkingRequest{
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行步行路径规划请求
+	resp, err := client.Walking(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "origin参数不能为空")
+}
+
+// TestWalking_MissingDestination 测试Walking方法缺少必填参数Destination
+func TestWalking_MissingDestination(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Destination的请求参数
+	req := &walking.WalkingRequest{
+		Origin: "116.351147,39.936871",
+	}
+
+	// 3. 执行步行路径规划请求
+	resp, err := client.Walking(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "destination参数不能为空")
+}
+
+// TestWalking_InvalidCoordinateFormat 测试Walking方法坐标格式错误
+func TestWalking_InvalidCoordinateFormat(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建格式错误的坐标参数
+	req := &walking.WalkingRequest{
+		Origin:      "116.351147 39.936871", // 使用空格分隔而不是逗号
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行步行路径规划请求
+	resp, err := client.Walking(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "坐标格式错误")
+}
+
+// TestWalking_APIError 测试Walking方法API返回错误
+func TestWalking_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &walking.WalkingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行步行路径规划请求
+	resp, err := client.Walking(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 驾车路径规划测试 --------------------------
+
+// TestDriving_Success 测试Driving方法正常请求成功
+func TestDriving_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回驾车路径规划成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"route": {
+			"origin": "116.351147,39.936871",
+			"destination": "116.410001,39.910113",
+			"paths": [
+				{
+					"distance": "5237",
+					"duration": "240",
+					"steps": [
+						{
+							"instruction": "沿建国路向东行驶1.2公里",
+							"orientation": "东",
+							"road": "建国路",
+							"distance": "1200",
+							"duration": "60",
+							"polyline": "116.351147,39.936871;116.352247,39.936771"
+						}
+					],
+					"polyline": "116.351147,39.936871;116.352247,39.936771;116.410001,39.910113",
+					"tolls": "5"
+				}
+			],
+			"distance": "5237",
+			"duration": "240",
+			"tolls": "5"
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &driving.DrivingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行驾车路径规划请求
+	resp, err := client.Driving(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "116.351147,39.936871", resp.Route.Origin)
+	assert.Equal(t, "116.410001,39.910113", resp.Route.Destination)
+	assert.Equal(t, "5237", resp.Route.Distance)
+	assert.Equal(t, "240", resp.Route.Duration)
+	assert.Equal(t, "5", resp.Route.Tolls)
+	assert.Len(t, resp.Route.Paths, 1)
+	assert.Equal(t, "5237", resp.Route.Paths[0].Distance)
+	assert.Equal(t, "240", resp.Route.Paths[0].Duration)
+	assert.Len(t, resp.Route.Paths[0].Steps, 1)
+	assert.Equal(t, "沿建国路向东行驶1.2公里", resp.Route.Paths[0].Steps[0].Instruction)
+}
+
+// TestDriving_MissingOrigin 测试Driving方法缺少必填参数Origin
+func TestDriving_MissingOrigin(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Origin的请求参数
+	req := &driving.DrivingRequest{
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行驾车路径规划请求
+	resp, err := client.Driving(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "origin参数不能为空")
+}
+
+// TestDriving_MissingDestination 测试Driving方法缺少必填参数Destination
+func TestDriving_MissingDestination(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Destination的请求参数
+	req := &driving.DrivingRequest{
+		Origin: "116.351147,39.936871",
+	}
+
+	// 3. 执行驾车路径规划请求
+	resp, err := client.Driving(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "destination参数不能为空")
+}
+
+// TestDriving_InvalidCoordinateFormat 测试Driving方法坐标格式错误
+func TestDriving_InvalidCoordinateFormat(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建格式错误的坐标参数
+	req := &driving.DrivingRequest{
+		Origin:      "116.351147 39.936871", // 使用空格分隔而不是逗号
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行驾车路径规划请求
+	resp, err := client.Driving(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "坐标格式错误")
+}
+
+// TestDriving_APIError 测试Driving方法API返回错误
+func TestDriving_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &driving.DrivingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行驾车路径规划请求
+	resp, err := client.Driving(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 骑行路径规划测试 --------------------------
+
+// TestBicycling_Success 测试Bicycling方法正常请求成功
+func TestBicycling_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回骑行路径规划成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"route": {
+			"origin": "116.351147,39.936871",
+			"destination": "116.410001,39.910113",
+			"paths": [
+				{
+					"distance": "4237",
+					"duration": "280",
+					"steps": [
+						{
+							"instruction": "沿骑行专用道向东行驶800米",
+							"orientation": "东",
+							"road": "建国路骑行道",
+							"distance": "800",
+							"duration": "50",
+							"polyline": "116.351147,39.936871;116.351947,39.936771"
+						}
+					],
+					"polyline": "116.351147,39.936871;116.351947,39.936771;116.410001,39.910113"
+				}
+			],
+			"distance": "4237",
+			"duration": "280"
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &bicycling.BicyclingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行骑行路径规划请求
+	resp, err := client.Bicycling(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "116.351147,39.936871", resp.Route.Origin)
+	assert.Equal(t, "116.410001,39.910113", resp.Route.Destination)
+	assert.Equal(t, "4237", resp.Route.Distance)
+	assert.Equal(t, "280", resp.Route.Duration)
+	assert.Len(t, resp.Route.Paths, 1)
+	assert.Equal(t, "4237", resp.Route.Paths[0].Distance)
+	assert.Equal(t, "280", resp.Route.Paths[0].Duration)
+	assert.Len(t, resp.Route.Paths[0].Steps, 1)
+	assert.Equal(t, "沿骑行专用道向东行驶800米", resp.Route.Paths[0].Steps[0].Instruction)
+}
+
+// TestBicycling_MissingOrigin 测试Bicycling方法缺少必填参数Origin
+func TestBicycling_MissingOrigin(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Origin的请求参数
+	req := &bicycling.BicyclingRequest{
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行骑行路径规划请求
+	resp, err := client.Bicycling(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "origin参数不能为空")
+}
+
+// TestBicycling_MissingDestination 测试Bicycling方法缺少必填参数Destination
+func TestBicycling_MissingDestination(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Destination的请求参数
+	req := &bicycling.BicyclingRequest{
+		Origin: "116.351147,39.936871",
+	}
+
+	// 3. 执行骑行路径规划请求
+	resp, err := client.Bicycling(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "destination参数不能为空")
+}
+
+// TestBicycling_InvalidCoordinateFormat 测试Bicycling方法坐标格式错误
+func TestBicycling_InvalidCoordinateFormat(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建格式错误的坐标参数
+	req := &bicycling.BicyclingRequest{
+		Origin:      "116.351147 39.936871", // 使用空格分隔而不是逗号
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行骑行路径规划请求
+	resp, err := client.Bicycling(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "坐标格式错误")
+}
+
+// TestBicycling_APIError 测试Bicycling方法API返回错误
+func TestBicycling_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &bicycling.BicyclingRequest{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 4. 执行骑行路径规划请求
+	resp, err := client.Bicycling(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
 }

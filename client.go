@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	bicycling "github.com/enneket/amap/api/direction/bicycling"
+	driving "github.com/enneket/amap/api/direction/driving"
+	walking "github.com/enneket/amap/api/direction/walking"
+	distance "github.com/enneket/amap/api/distance"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	amapErr "github.com/enneket/amap/errors"
@@ -126,6 +130,111 @@ func (c *Client) ReGeocode(req *reGeoCode.ReGeocodeRequest) (*reGeoCode.ReGeocod
 	// 调用核心请求方法
 	var resp reGeoCode.ReGeocodeResponse
 	if err := c.DoRequest("geocode/regeo", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Walking 步行路径规划API调用方法
+func (c *Client) Walking(req *walking.WalkingRequest) (*walking.WalkingResponse, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp walking.WalkingResponse
+	if err := c.DoRequest("direction/walking", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Driving 驾车路径规划API调用方法
+func (c *Client) Driving(req *driving.DrivingRequest) (*driving.DrivingResponse, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp driving.DrivingResponse
+	if err := c.DoRequest("direction/driving", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Bicycling 骑行路径规划API调用方法
+func (c *Client) Bicycling(req *bicycling.BicyclingRequest) (*bicycling.BicyclingResponse, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp bicycling.BicyclingResponse
+	if err := c.DoRequest("direction/bicycling", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Distance 距离测量API调用方法
+func (c *Client) Distance(req *distance.DistanceRequest) (*distance.DistanceResponse, error) {
+	// 校验必填参数
+	if req.Origins == "" {
+		return nil, amapErr.NewInvalidConfigError("距离测量：origins参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("距离测量：destination参数不能为空")
+	}
+
+	// 简单校验经纬度格式（至少包含一个有效的经纬度对）
+	if !strings.Contains(req.Origins, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("距离测量：坐标格式错误，应为\"经度,纬度|经度,纬度\"或单个\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp distance.DistanceResponse
+	if err := c.DoRequest("direction/distance", params, &resp); err != nil {
 		return nil, err
 	}
 
