@@ -12,6 +12,7 @@ import (
 	driving "github.com/enneket/amap/api/direction/v1/driving"
 	walking "github.com/enneket/amap/api/direction/v1/walking"
 	district "github.com/enneket/amap/api/district"
+	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 
 	// v2版本API
 	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
@@ -2408,4 +2409,297 @@ func TestDistrict_WithFilter(t *testing.T) {
 	assert.Len(t, resp.Districts, 1)
 	assert.Equal(t, "广州市", resp.Districts[0].Name)
 	assert.Equal(t, "020", resp.Districts[0].Citycode)
+}
+
+// -------------------------- 交通事件查询测试 --------------------------
+
+// TestTrafficIncident_Success 测试TrafficIncident方法正常请求成功
+func TestTrafficIncident_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回交通事件查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"trafficincidents": [
+			{
+				"id": "12345",
+				"location": "116.351147,39.904989",
+				"type": "1",
+				"type_des": "道路施工",
+				"level": "2",
+				"level_des": "一般",
+				"description": "建国路与长安街交叉口道路施工，影响车辆通行",
+				"polyline": "116.351147,39.904989;116.352147,39.905989",
+				"road": "建国路",
+				"start_time": "1600000000",
+				"end_time": "1600003600",
+				"direction": "东向西",
+				"status": "1",
+				"impact_level": "2",
+				"affect_road_length": "500",
+				"first_report_time": "1600000000",
+				"last_report_time": "1600000100"
+			},
+			{
+				"id": "12346",
+				"location": "116.361147,39.914989",
+				"type": "3",
+				"type_des": "交通事故",
+				"level": "3",
+				"level_des": "严重",
+				"description": "长安街东单路口发生交通事故，占用2条车道",
+				"polyline": "116.361147,39.914989;116.362147,39.915989",
+				"road": "长安街",
+				"start_time": "1600000000",
+				"end_time": "1600002400",
+				"direction": "西向东",
+				"status": "1",
+				"impact_level": "3",
+				"affect_road_length": "800",
+				"first_report_time": "1600000000",
+				"last_report_time": "1600000200"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level:     "1",                                         // 所有级别
+		Type:      "1|3",                                       // 道路施工和交通事故
+		Rectangle: "116.300000,39.900000,116.400000,39.950000", // 北京核心区域
+	}
+
+	// 4. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Len(t, resp.Trafficincidents, 2)
+
+	// 验证第一个事件
+	assert.Equal(t, "12345", resp.Trafficincidents[0].Id)
+	assert.Equal(t, "1", resp.Trafficincidents[0].Type)
+	assert.Equal(t, "道路施工", resp.Trafficincidents[0].TypeDes)
+	assert.Equal(t, "2", resp.Trafficincidents[0].Level)
+	assert.Equal(t, "一般", resp.Trafficincidents[0].LevelDes)
+	assert.Equal(t, "建国路", resp.Trafficincidents[0].Road)
+	assert.Equal(t, "1", resp.Trafficincidents[0].Status)
+
+	// 验证第二个事件
+	assert.Equal(t, "12346", resp.Trafficincidents[1].Id)
+	assert.Equal(t, "3", resp.Trafficincidents[1].Type)
+	assert.Equal(t, "交通事故", resp.Trafficincidents[1].TypeDes)
+	assert.Equal(t, "3", resp.Trafficincidents[1].Level)
+	assert.Equal(t, "严重", resp.Trafficincidents[1].LevelDes)
+	assert.Equal(t, "长安街", resp.Trafficincidents[1].Road)
+}
+
+// TestTrafficIncident_MissingLevel 测试TrafficIncident方法缺少必填参数Level
+func TestTrafficIncident_MissingLevel(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Level的请求参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Type:      "1",
+		Rectangle: "116.300000,39.900000,116.400000,39.950000",
+	}
+
+	// 3. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "level参数不能为空")
+}
+
+// TestTrafficIncident_MissingType 测试TrafficIncident方法缺少必填参数Type
+func TestTrafficIncident_MissingType(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Type的请求参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level:     "1",
+		Rectangle: "116.300000,39.900000,116.400000,39.950000",
+	}
+
+	// 3. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "type参数不能为空")
+}
+
+// TestTrafficIncident_MissingRectangle 测试TrafficIncident方法缺少必填参数Rectangle
+func TestTrafficIncident_MissingRectangle(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Rectangle的请求参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level: "1",
+		Type:  "1",
+	}
+
+	// 3. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "rectangle参数不能为空")
+}
+
+// TestTrafficIncident_InvalidRectangleFormat 测试TrafficIncident方法Rectangle格式错误
+func TestTrafficIncident_InvalidRectangleFormat(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建格式错误的Rectangle参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level:     "1",
+		Type:      "1",
+		Rectangle: "116.300000,39.900000,116.400000", // 缺少一个坐标点
+	}
+
+	// 3. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "rectangle格式错误")
+}
+
+// TestTrafficIncident_APIError 测试TrafficIncident方法API返回错误
+func TestTrafficIncident_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level:     "1",
+		Type:      "1",
+		Rectangle: "116.300000,39.900000,116.400000,39.950000",
+	}
+
+	// 4. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestTrafficIncident_WithExtensionsAll 测试TrafficIncident方法使用extensions=all
+func TestTrafficIncident_WithExtensionsAll(t *testing.T) {
+	// 1. 创建mock服务器，返回带详细信息的交通事件响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"trafficincidents": [
+			{
+				"id": "12347",
+				"location": "116.371147,39.924989",
+				"type": "5",
+				"type_des": "交通拥堵",
+				"level": "3",
+				"level_des": "严重",
+				"description": "东三环中路交通拥堵，车辆行驶缓慢",
+				"polyline": "116.371147,39.924989;116.372147,39.925989",
+				"road": "东三环中路",
+				"start_time": "1600000000",
+				"end_time": "1600003600",
+				"direction": "南向北",
+				"status": "1",
+				"impact_level": "3",
+				"affect_road_length": "1000",
+				"jams": [
+					{
+						"location": "116.371147,39.924989",
+						"direction": "南向北",
+						"length": "1000",
+						"level": "4",
+						"status": "1",
+						"speed": "10",
+						"polyline": "116.371147,39.924989;116.372147,39.925989",
+						"start_time": "1600000000",
+						"end_time": "1600003600"
+					}
+				],
+				"first_report_time": "1600000000",
+				"last_report_time": "1600000100"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用extensions=all
+	req := &trafficIncident.TrafficIncidentRequest{
+		Level:      "1",
+		Type:       "5",
+		Rectangle:  "116.300000,39.900000,116.400000,39.950000",
+		Extensions: "all", // 返回详细信息
+	}
+
+	// 4. 执行交通事件查询请求
+	resp, err := client.TrafficIncident(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Len(t, resp.Trafficincidents, 1)
+	assert.Len(t, resp.Trafficincidents[0].Jams, 1) // 包含拥堵信息
+	assert.Equal(t, "1000", resp.Trafficincidents[0].Jams[0].Length)
+	assert.Equal(t, "4", resp.Trafficincidents[0].Jams[0].Level)
+	assert.Equal(t, "10", resp.Trafficincidents[0].Jams[0].Speed)
 }

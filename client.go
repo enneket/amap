@@ -25,6 +25,7 @@ distance "github.com/enneket/amap/api/distance"
 district "github.com/enneket/amap/api/district"
 geoCode "github.com/enneket/amap/api/geo_code"
 reGeoCode "github.com/enneket/amap/api/re_geo_code"
+trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
@@ -396,6 +397,43 @@ func (c *Client) District(req *district.DistrictRequest) (*district.DistrictResp
 	// 调用核心请求方法
 	var resp district.DistrictResponse
 	if err := c.DoRequest("config/district", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// TrafficIncident 交通事件查询API调用方法
+// 支持查询指定区域内的交通事件，可按事件级别和类型筛选
+func (c *Client) TrafficIncident(req *trafficIncident.TrafficIncidentRequest) (*trafficIncident.TrafficIncidentResponse, error) {
+	// 校验必填参数
+	if req.Level == "" {
+		return nil, amapErr.NewInvalidConfigError("交通事件查询：level参数不能为空")
+	}
+	if req.Type == "" {
+		return nil, amapErr.NewInvalidConfigError("交通事件查询：type参数不能为空")
+	}
+	if req.Rectangle == "" {
+		return nil, amapErr.NewInvalidConfigError("交通事件查询：rectangle参数不能为空")
+	}
+
+	// 简单校验矩形区域格式（必须包含3个逗号，如："116.351147,39.904989,116.480317,39.976564"）
+	commaCount := 0
+	for _, char := range req.Rectangle {
+		if char == ',' {
+			commaCount++
+		}
+	}
+	if commaCount != 3 {
+		return nil, amapErr.NewInvalidConfigError("交通事件查询：rectangle格式错误，应为\"左下经度,左下纬度,右上经度,右上纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp trafficIncident.TrafficIncidentResponse
+	if err := c.DoRequest("traffic/status", params, &resp); err != nil {
 		return nil, err
 	}
 
