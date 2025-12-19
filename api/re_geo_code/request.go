@@ -21,38 +21,38 @@ type ReGeocodeRequest struct {
 	HouseNumber    string                  `json:"housenumber"`     // 可选：是否返回门牌号（"true"/"false"，默认false，仅extensions=all时生效）
 }
 
-// ToParams 转换为请求参数map（过滤空值）
-func (r *ReGeocodeRequest) ToParams() map[string]string {
+// ToParams 将请求参数转换为map[string]string格式
+func (req *ReGeocodeRequest) ToParams() map[string]string {
 	params := make(map[string]string)
-	if r.Location != "" {
-		params["location"] = r.Location
+	if req.Location != "" {
+		params["location"] = req.Location
 	}
-	if r.Radius > 0 {
-		params["radius"] = strconv.Itoa(r.Radius)
+	if req.Radius > 0 {
+		params["radius"] = strconv.Itoa(req.Radius)
 	}
-	if r.CoordinateType != "" {
-		params["coordinate_type"] = string(r.CoordinateType)
+	if req.CoordinateType != "" {
+		params["coordinate_type"] = string(req.CoordinateType)
 	}
-	if r.Extensions != "" {
-		params["extensions"] = r.Extensions
+	if req.Extensions != "" {
+		params["extensions"] = req.Extensions
 	}
-	if r.Output != "" {
-		params["output"] = string(r.Output)
+	if req.Output != "" {
+		params["output"] = string(req.Output)
 	}
-	if r.Language != "" {
-		params["language"] = string(r.Language)
+	if req.Language != "" {
+		params["language"] = string(req.Language)
 	}
-	if r.Callback != "" {
-		params["callback"] = r.Callback
+	if req.Callback != "" {
+		params["callback"] = req.Callback
 	}
-	if r.Timestamp != "" {
-		params["timestamp"] = r.Timestamp
+	if req.Timestamp != "" {
+		params["timestamp"] = req.Timestamp
 	}
-	if r.Poitype != "" {
-		params["poitype"] = r.Poitype
+	if req.Poitype != "" {
+		params["poitype"] = req.Poitype
 	}
-	if r.HouseNumber != "" {
-		params["housenumber"] = r.HouseNumber
+	if req.HouseNumber != "" {
+		params["housenumber"] = req.HouseNumber
 	}
 	return params
 }

@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	geoCode "github.com/enneket/amap/api/geo_code"
+	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	amapErr "github.com/enneket/amap/errors"
-	geoCode "github.com/enneket/amap/geo_code"
-	reGeoCode "github.com/enneket/amap/re_geo_code"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

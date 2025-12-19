@@ -1,13 +1,13 @@
 package geo_code
 
 import (
-	amapType "github.com/enneket/amap/types"
+	"github.com/enneket/amap/types"
 )
 
-// GeocodeResponse 地理编码响应
+// GeoCodeResponse 地理编码响应
 // 文档：https://lbs.amap.com/api/webservice/guide/api/georegeo/#geo
 type GeoCodeResponse struct {
-	amapType.BaseResponse               // 继承基础响应（Status/Info/InfoCode）
+	types.BaseResponse                  // 继承基础响应（Status/Info/InfoCode）
 	Count                 string        `json:"count"`    // 匹配的地址数量
 	Geocodes              []GeocodeItem `json:"geocodes"` // 地理编码结果列表
 }

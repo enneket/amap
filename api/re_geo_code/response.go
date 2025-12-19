@@ -1,11 +1,11 @@
 package re_geo_code
 
-import amapType "github.com/enneket/amap/types"
+import "github.com/enneket/amap/types"
 
 // ReGeocodeResponse 逆地理编码响应
 // 文档：https://lbs.amap.com/api/webservice/guide/api/georegeo/#regeo
 type ReGeocodeResponse struct {
-	amapType.BaseResponse               // 继承基础响应（Status/Info/InfoCode）
+	types.BaseResponse               // 继承基础响应（Status/Info/InfoCode）
 	ReGeocode             ReGeocodeData `json:"regeocode"` // 逆地理编码核心数据
 }
 
