@@ -27,6 +27,7 @@ geoCode "github.com/enneket/amap/api/geo_code"
 ipconfig "github.com/enneket/amap/api/ipconfig"
 reGeoCode "github.com/enneket/amap/api/re_geo_code"
 trafficIncident "github.com/enneket/amap/api/traffic-incident"
+convert "github.com/enneket/amap/api/convert"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
@@ -455,6 +456,30 @@ func (c *Client) IPConfig(req *ipconfig.IPConfigRequest) (*ipconfig.IPConfigResp
 	// 调用核心请求方法
 	var resp ipconfig.IPConfigResponse
 	if err := c.DoRequest("ip", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Convert 坐标转换API调用方法
+// 支持将其他坐标系的坐标转换为高德坐标系（GCJ02）
+// 支持批量转换，一次最多转换40对坐标
+func (c *Client) Convert(req *convert.ConvertRequest) (*convert.ConvertResponse, error) {
+	// 校验必填参数
+	if req.Locations == "" {
+		return nil, amapErr.NewInvalidConfigError("坐标转换：locations参数不能为空")
+	}
+	if req.CoordSys == "" {
+		return nil, amapErr.NewInvalidConfigError("坐标转换：coordsys参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp convert.ConvertResponse
+	if err := c.DoRequest("convert", params, &resp); err != nil {
 		return nil, err
 	}
 

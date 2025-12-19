@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	convert "github.com/enneket/amap/api/convert"
 	bicycling "github.com/enneket/amap/api/direction/v1/bicycling"
 	driving "github.com/enneket/amap/api/direction/v1/driving"
 	walking "github.com/enneket/amap/api/direction/v1/walking"
@@ -23,8 +24,6 @@ import (
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
 
 	// 其他API
-
-	// v2版本API
 
 	distance "github.com/enneket/amap/api/distance"
 	geoCode "github.com/enneket/amap/api/geo_code"
@@ -2918,4 +2917,108 @@ func TestIPConfig_WithLocationInfo(t *testing.T) {
 	assert.Equal(t, "ISP", resp.Location.ISPInfo.Type)
 	assert.Equal(t, "310", resp.Location.ISPInfo.MCC)
 	assert.Equal(t, "260", resp.Location.ISPInfo.MNC)
+}
+
+// -------------------------- 坐标转换测试 --------------------------
+
+// TestConvert_Success 测试Convert方法正常转换成功
+func TestConvert_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回正常转换结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"locations": "116.480656,39.989610;116.30815,39.95965"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，转换GPS坐标到高德坐标
+	req := &convert.ConvertRequest{
+		Locations: "116.480656,39.989610;116.30815,39.95965",
+		CoordSys:  "gps",
+	}
+	resp, err := client.Convert(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "116.480656,39.989610;116.30815,39.95965", resp.Locations)
+}
+
+// TestConvert_MissingLocations 测试Convert方法缺少必填参数locations
+func TestConvert_MissingLocations(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 执行请求，缺少locations参数
+	req := &convert.ConvertRequest{
+		Locations: "", // 缺少必填参数
+		CoordSys:  "gps",
+	}
+	resp, err := client.Convert(req)
+
+	// 3. 验证结果
+	assert.Error(t, err)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Nil(t, resp)
+}
+
+// TestConvert_MissingCoordSys 测试Convert方法缺少必填参数coordsys
+func TestConvert_MissingCoordSys(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 执行请求，缺少coordsys参数
+	req := &convert.ConvertRequest{
+		Locations: "116.480656,39.989610",
+		CoordSys:  "", // 缺少必填参数
+	}
+	resp, err := client.Convert(req)
+
+	// 3. 验证结果
+	assert.Error(t, err)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Nil(t, resp)
+}
+
+// TestConvert_APIError 测试Convert方法API返回错误
+func TestConvert_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的coordsys参数",
+		"infocode": "10003"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，使用无效的coordsys
+	req := &convert.ConvertRequest{
+		Locations: "116.480656,39.989610",
+		CoordSys:  "invalid_coordsys", // 无效的coordsys值
+	}
+	resp, err := client.Convert(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10003", apiErr.Code)
+	assert.Equal(t, "无效的coordsys参数", apiErr.Info)
 }
