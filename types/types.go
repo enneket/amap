@@ -3,6 +3,8 @@ package amap
 import (
 	"encoding/json"
 	"io"
+
+	appErr "github.com/enneket/amap/errors"
 )
 
 // BaseResponse 高德API所有接口的通用基础响应
@@ -20,13 +22,13 @@ func ReadBaseResponse(r io.Reader) (BaseResponse, []byte, error) {
 	// 1. 先读取完整的响应体（避免body被消费后无法复用）
 	rawBody, err := io.ReadAll(r)
 	if err != nil {
-		return BaseResponse{}, nil, NewParseError("读取响应体失败: " + err.Error())
+		return BaseResponse{}, nil, appErr.NewParseError("读取响应体失败: " + err.Error())
 	}
 
 	// 2. 解析基础响应
 	var baseResp BaseResponse
 	if err := json.Unmarshal(rawBody, &baseResp); err != nil {
-		return BaseResponse{}, nil, NewParseError("解析基础响应失败: " + err.Error())
+		return BaseResponse{}, nil, appErr.NewParseError("解析基础响应失败: " + err.Error())
 	}
 
 	// 3. 保存原始JSON（供业务响应解析）

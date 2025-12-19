@@ -1,4 +1,4 @@
-package amap
+package errors
 
 import "fmt"
 
