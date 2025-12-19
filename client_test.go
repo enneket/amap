@@ -13,6 +13,7 @@ import (
 	driving "github.com/enneket/amap/api/direction/v1/driving"
 	walking "github.com/enneket/amap/api/direction/v1/walking"
 	district "github.com/enneket/amap/api/district"
+	grasproad "github.com/enneket/amap/api/grasproad"
 	ipconfig "github.com/enneket/amap/api/ipconfig"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 
@@ -3021,4 +3022,220 @@ func TestConvert_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10003", apiErr.Code)
 	assert.Equal(t, "无效的coordsys参数", apiErr.Info)
+}
+
+// -------------------------- 轨迹纠偏测试 --------------------------
+
+// TestGraspRoad_Success 测试GraspRoad方法正常纠偏成功
+func TestGraspRoad_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回正常纠偏结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"sid": "test_sid",
+		"paths": [
+			{
+				"points": [
+					{
+						"location": "116.480656,39.989610",
+						"time": 1600000000,
+						"speed": 30.5
+					},
+					{
+						"location": "116.481656,39.990610",
+						"time": 1600000100,
+						"speed": 32.0
+					}
+				]
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，纠偏轨迹点
+	req := &grasproad.GraspRoadRequest{
+		SID:            "test_sid",
+		Points:         "116.480656,39.989610,1600000000,30.5;116.481656,39.990610,1600000100,32.0",
+		CoordTypeInput: "gps",
+	}
+	resp, err := client.GraspRoad(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "test_sid", resp.SID)
+	assert.Len(t, resp.Paths, 1)
+	assert.Len(t, resp.Paths[0].Points, 2)
+	assert.Equal(t, "116.480656,39.989610", resp.Paths[0].Points[0].Location)
+	assert.Equal(t, int64(1600000000), resp.Paths[0].Points[0].Time)
+	assert.Equal(t, 30.5, resp.Paths[0].Points[0].Speed)
+}
+
+// TestGraspRoad_MissingSID 测试GraspRoad方法缺少必填参数sid
+func TestGraspRoad_MissingSID(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 执行请求，缺少sid参数
+	req := &grasproad.GraspRoadRequest{
+		Points:         "116.480656,39.989610,1600000000,30.5",
+		CoordTypeInput: "gps",
+	}
+	resp, err := client.GraspRoad(req)
+
+	// 3. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "sid参数不能为空")
+}
+
+// TestGraspRoad_MissingPoints 测试GraspRoad方法缺少必填参数points
+func TestGraspRoad_MissingPoints(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 执行请求，缺少points参数
+	req := &grasproad.GraspRoadRequest{
+		SID:            "test_sid",
+		CoordTypeInput: "gps",
+	}
+	resp, err := client.GraspRoad(req)
+
+	// 3. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "points参数不能为空")
+}
+
+// TestGraspRoad_APIError 测试GraspRoad方法API返回错误
+func TestGraspRoad_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &grasproad.GraspRoadRequest{
+		SID:            "test_sid",
+		Points:         "116.480656,39.989610,1600000000,30.5",
+		CoordTypeInput: "gps",
+	}
+	resp, err := client.GraspRoad(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestGraspRoad_WithExtensionsAll 测试GraspRoad方法使用extensions=all
+func TestGraspRoad_WithExtensionsAll(t *testing.T) {
+	// 1. 创建mock服务器，返回带详细信息的纠偏结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"sid": "test_sid_all",
+		"paths": [
+			{
+				"distance": 200,
+				"time": 20,
+				"points": [
+					{
+						"location": "116.480656,39.989610",
+						"time": 1600000000,
+						"speed": 30.5,
+						"direction": 90,
+						"road_id": "road123",
+						"road_name": "建国路",
+						"match_type": 1,
+						"status": 0
+					},
+					{
+						"location": "116.481656,39.990610",
+						"time": 1600000100,
+						"speed": 32.0,
+						"direction": 95,
+						"road_id": "road123",
+						"road_name": "建国路",
+						"match_type": 1,
+						"status": 0
+					}
+				],
+				"steps": [
+					{
+						"start_index": 0,
+						"end_index": 1,
+						"road": {
+							"id": "road123",
+							"name": "建国路",
+							"type": 4,
+							"level": 3,
+							"width": 30.5,
+							"lanes": 4,
+							"max_speed": 60
+						}
+					}
+				]
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，使用extensions=all
+	req := &grasproad.GraspRoadRequest{
+		SID:            "test_sid_all",
+		Points:         "116.480656,39.989610,1600000000,30.5;116.481656,39.990610,1600000100,32.0",
+		CoordTypeInput: "gps",
+		Extensions:     "all",
+	}
+	resp, err := client.GraspRoad(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "test_sid_all", resp.SID)
+	assert.Len(t, resp.Paths, 1)
+	assert.Equal(t, 200, resp.Paths[0].Distance)
+	assert.Equal(t, 20, resp.Paths[0].Time)
+	assert.Len(t, resp.Paths[0].Points, 2)
+	assert.Equal(t, 90, resp.Paths[0].Points[0].Direction)
+	assert.Equal(t, "road123", resp.Paths[0].Points[0].RoadID)
+	assert.Equal(t, "建国路", resp.Paths[0].Points[0].RoadName)
+	assert.Equal(t, 1, resp.Paths[0].Points[0].MatchType)
+	assert.Equal(t, 0, resp.Paths[0].Points[0].Status)
+	assert.Len(t, resp.Paths[0].Steps, 1)
+	assert.Equal(t, "建国路", resp.Paths[0].Steps[0].Road.Name)
+	assert.Equal(t, 60, resp.Paths[0].Steps[0].Road.MaxSpeed)
 }

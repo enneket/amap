@@ -24,6 +24,7 @@ import (
 distance "github.com/enneket/amap/api/distance"
 district "github.com/enneket/amap/api/district"
 geoCode "github.com/enneket/amap/api/geo_code"
+grasproad "github.com/enneket/amap/api/grasproad"
 ipconfig "github.com/enneket/amap/api/ipconfig"
 reGeoCode "github.com/enneket/amap/api/re_geo_code"
 trafficIncident "github.com/enneket/amap/api/traffic-incident"
@@ -480,6 +481,29 @@ func (c *Client) Convert(req *convert.ConvertRequest) (*convert.ConvertResponse,
 	// 调用核心请求方法
 	var resp convert.ConvertResponse
 	if err := c.DoRequest("convert", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// GraspRoad 轨迹纠偏API调用方法
+// 用于将原始轨迹点转换为匹配道路的轨迹点，支持批量处理
+func (c *Client) GraspRoad(req *grasproad.GraspRoadRequest) (*grasproad.GraspRoadResponse, error) {
+	// 校验必填参数
+	if req.SID == "" {
+		return nil, amapErr.NewInvalidConfigError("轨迹纠偏：sid参数不能为空")
+	}
+	if req.Points == "" {
+		return nil, amapErr.NewInvalidConfigError("轨迹纠偏：points参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp grasproad.GraspRoadResponse
+	if err := c.DoRequest("grasproad", params, &resp); err != nil {
 		return nil, err
 	}
 
