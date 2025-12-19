@@ -8,9 +8,19 @@ import (
 	"strings"
 	"time"
 
-	bicycling "github.com/enneket/amap/api/direction/bicycling"
-	driving "github.com/enneket/amap/api/direction/driving"
-	walking "github.com/enneket/amap/api/direction/walking"
+	// v1版本API
+	bicyclingV1 "github.com/enneket/amap/api/direction/v1/bicycling"
+	drivingV1 "github.com/enneket/amap/api/direction/v1/driving"
+	walkingV1 "github.com/enneket/amap/api/direction/v1/walking"
+
+	// v2版本API
+	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
+	busV2 "github.com/enneket/amap/api/direction/v2/bus"
+	drivingV2 "github.com/enneket/amap/api/direction/v2/driving"
+	electricV2 "github.com/enneket/amap/api/direction/v2/electric"
+	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
+
+	// 其他API
 	distance "github.com/enneket/amap/api/distance"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
@@ -136,8 +146,8 @@ func (c *Client) ReGeocode(req *reGeoCode.ReGeocodeRequest) (*reGeoCode.ReGeocod
 	return &resp, nil
 }
 
-// Walking 步行路径规划API调用方法
-func (c *Client) Walking(req *walking.WalkingRequest) (*walking.WalkingResponse, error) {
+// Walking 步行路径规划API调用方法（v1）
+func (c *Client) Walking(req *walkingV1.WalkingRequest) (*walkingV1.WalkingResponse, error) {
 	// 校验必填参数
 	if req.Origin == "" {
 		return nil, amapErr.NewInvalidConfigError("步行路径规划：origin参数不能为空")
@@ -154,7 +164,7 @@ func (c *Client) Walking(req *walking.WalkingRequest) (*walking.WalkingResponse,
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp walking.WalkingResponse
+	var resp walkingV1.WalkingResponse
 	if err := c.DoRequest("direction/walking", params, &resp); err != nil {
 		return nil, err
 	}
@@ -162,8 +172,8 @@ func (c *Client) Walking(req *walking.WalkingRequest) (*walking.WalkingResponse,
 	return &resp, nil
 }
 
-// Driving 驾车路径规划API调用方法
-func (c *Client) Driving(req *driving.DrivingRequest) (*driving.DrivingResponse, error) {
+// Driving 驾车路径规划API调用方法（v1）
+func (c *Client) Driving(req *drivingV1.DrivingRequest) (*drivingV1.DrivingResponse, error) {
 	// 校验必填参数
 	if req.Origin == "" {
 		return nil, amapErr.NewInvalidConfigError("驾车路径规划：origin参数不能为空")
@@ -180,7 +190,7 @@ func (c *Client) Driving(req *driving.DrivingRequest) (*driving.DrivingResponse,
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp driving.DrivingResponse
+	var resp drivingV1.DrivingResponse
 	if err := c.DoRequest("direction/driving", params, &resp); err != nil {
 		return nil, err
 	}
@@ -188,8 +198,8 @@ func (c *Client) Driving(req *driving.DrivingRequest) (*driving.DrivingResponse,
 	return &resp, nil
 }
 
-// Bicycling 骑行路径规划API调用方法
-func (c *Client) Bicycling(req *bicycling.BicyclingRequest) (*bicycling.BicyclingResponse, error) {
+// Bicycling 骑行路径规划API调用方法（v1）
+func (c *Client) Bicycling(req *bicyclingV1.BicyclingRequest) (*bicyclingV1.BicyclingResponse, error) {
 	// 校验必填参数
 	if req.Origin == "" {
 		return nil, amapErr.NewInvalidConfigError("骑行路径规划：origin参数不能为空")
@@ -206,8 +216,138 @@ func (c *Client) Bicycling(req *bicycling.BicyclingRequest) (*bicycling.Bicyclin
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp bicycling.BicyclingResponse
+	var resp bicyclingV1.BicyclingResponse
 	if err := c.DoRequest("direction/bicycling", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// WalkingV2 步行路径规划API调用方法（v2）
+func (c *Client) WalkingV2(req *walkingV2.WalkingRequestV2) (*walkingV2.WalkingResponseV2, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划v2：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划v2：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("步行路径规划v2：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp walkingV2.WalkingResponseV2
+	if err := c.DoRequest("direction/v2/walking", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// DrivingV2 驾车路径规划API调用方法（v2）
+func (c *Client) DrivingV2(req *drivingV2.DrivingRequestV2) (*drivingV2.DrivingResponseV2, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划v2：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划v2：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("驾车路径规划v2：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp drivingV2.DrivingResponseV2
+	if err := c.DoRequest("direction/v2/driving", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BicyclingV2 骑行路径规划API调用方法（v2）
+func (c *Client) BicyclingV2(req *bicyclingV2.BicyclingRequestV2) (*bicyclingV2.BicyclingResponseV2, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划v2：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划v2：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("骑行路径规划v2：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp bicyclingV2.BicyclingResponseV2
+	if err := c.DoRequest("direction/v2/bicycling", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BusV2 公交路线规划API调用方法（v2）
+func (c *Client) BusV2(req *busV2.BusRequestV2) (*busV2.BusResponseV2, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划v2：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划v2：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划v2：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busV2.BusResponseV2
+	if err := c.DoRequest("direction/v2/transit/integrated", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// ElectricV2 电动车路线规划API调用方法（v2）
+func (c *Client) ElectricV2(req *electricV2.ElectricRequestV2) (*electricV2.ElectricResponseV2, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("电动车路径规划v2：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("电动车路径规划v2：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("电动车路径规划v2：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp electricV2.ElectricResponseV2
+	if err := c.DoRequest("direction/v2/electric", params, &resp); err != nil {
 		return nil, err
 	}
 
