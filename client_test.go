@@ -11,11 +11,16 @@ import (
 	bicycling "github.com/enneket/amap/api/direction/v1/bicycling"
 	driving "github.com/enneket/amap/api/direction/v1/driving"
 	walking "github.com/enneket/amap/api/direction/v1/walking"
+	district "github.com/enneket/amap/api/district"
+
+	// v2版本API
 	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
 	busV2 "github.com/enneket/amap/api/direction/v2/bus"
 	drivingV2 "github.com/enneket/amap/api/direction/v2/driving"
 	electricV2 "github.com/enneket/amap/api/direction/v2/electric"
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
+
+	// 其他API
 
 	// v2版本API
 
@@ -2181,4 +2186,226 @@ func TestElectricV2_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 行政区查询测试 --------------------------
+
+// TestDistrict_Success 测试District方法正常请求成功
+func TestDistrict_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回行政区查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"districts": [
+			{
+				"name": "北京市",
+				"level": "province",
+				"adcode": "110000",
+				"citycode": "110000",
+				"center": "116.405285,39.904989",
+				"districts": [
+					{
+						"name": "东城区",
+						"level": "district",
+						"adcode": "110101",
+						"citycode": "110000",
+						"center": "116.410708,39.915224",
+						"parent_city": ["北京市"]
+					},
+					{
+						"name": "西城区",
+						"level": "district",
+						"adcode": "110102",
+						"citycode": "110000",
+						"center": "116.363593,39.913362",
+						"parent_city": ["北京市"]
+					}
+				]
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &district.DistrictRequest{
+		Keywords:    "北京市",
+		Subdistrict: "1", // 返回下一级行政区
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Districts, 1)
+	assert.Equal(t, "北京市", resp.Districts[0].Name)
+	assert.Equal(t, "province", resp.Districts[0].Level)
+	assert.Equal(t, "110000", resp.Districts[0].Adcode)
+	assert.Equal(t, "116.405285,39.904989", resp.Districts[0].Center)
+	assert.Len(t, resp.Districts[0].Districts, 2) // 应该返回2个区县
+	assert.Equal(t, "东城区", resp.Districts[0].Districts[0].Name)
+	assert.Equal(t, "西城区", resp.Districts[0].Districts[1].Name)
+}
+
+// TestDistrict_MissingKeywords 测试District方法缺少必填参数Keywords
+func TestDistrict_MissingKeywords(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Keywords的请求参数
+	req := &district.DistrictRequest{
+		Subdistrict: "1", // 只有Subdistrict，没有Keywords
+	}
+
+	// 3. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestDistrict_APIError 测试District方法API返回错误
+func TestDistrict_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &district.DistrictRequest{
+		Keywords: "北京市",
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestDistrict_WithAdcode 测试通过adcode查询行政区
+func TestDistrict_WithAdcode(t *testing.T) {
+	// 1. 创建mock服务器，返回行政区查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"districts": [
+			{
+				"name": "深圳市",
+				"level": "city",
+				"adcode": "440300",
+				"citycode": "0755",
+				"center": "114.057868,22.543099"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用adcode查询
+	req := &district.DistrictRequest{
+		Keywords:    "440300", // 深圳的adcode
+		Subdistrict: "0",      // 不返回子级行政区
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Districts, 1)
+	assert.Equal(t, "深圳市", resp.Districts[0].Name)
+	assert.Equal(t, "city", resp.Districts[0].Level)
+	assert.Equal(t, "440300", resp.Districts[0].Adcode)
+	assert.Equal(t, "0755", resp.Districts[0].Citycode)
+	assert.Len(t, resp.Districts[0].Districts, 0) // 不返回子级行政区
+}
+
+// TestDistrict_WithFilter 测试使用筛选条件查询行政区
+func TestDistrict_WithFilter(t *testing.T) {
+	// 1. 创建mock服务器，返回行政区查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"districts": [
+			{
+				"name": "广州市",
+				"level": "city",
+				"adcode": "440100",
+				"citycode": "020",
+				"center": "113.280637,23.125178"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用筛选条件
+	req := &district.DistrictRequest{
+		Keywords: "广州",
+		Filter:   "citycode:020", // 筛选citycode为020的城市
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Districts, 1)
+	assert.Equal(t, "广州市", resp.Districts[0].Name)
+	assert.Equal(t, "020", resp.Districts[0].Citycode)
 }

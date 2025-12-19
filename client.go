@@ -21,9 +21,10 @@ import (
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
 
 	// 其他API
-	distance "github.com/enneket/amap/api/distance"
-	geoCode "github.com/enneket/amap/api/geo_code"
-	reGeoCode "github.com/enneket/amap/api/re_geo_code"
+distance "github.com/enneket/amap/api/distance"
+district "github.com/enneket/amap/api/district"
+geoCode "github.com/enneket/amap/api/geo_code"
+reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
@@ -375,6 +376,26 @@ func (c *Client) Distance(req *distance.DistanceRequest) (*distance.DistanceResp
 	// 调用核心请求方法
 	var resp distance.DistanceResponse
 	if err := c.DoRequest("direction/distance", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// District 行政区查询API调用方法
+// 支持通过关键字搜索行政区，可指定返回子级行政区的级别
+func (c *Client) District(req *district.DistrictRequest) (*district.DistrictResponse, error) {
+	// 校验必填参数
+	if req.Keywords == "" {
+		return nil, amapErr.NewInvalidConfigError("行政区查询：keywords参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp district.DistrictResponse
+	if err := c.DoRequest("config/district", params, &resp); err != nil {
 		return nil, err
 	}
 
