@@ -8,28 +8,24 @@ import (
 	"strings"
 	"time"
 
-	// v1版本API
+	convert "github.com/enneket/amap/api/convert"
 	bicyclingV1 "github.com/enneket/amap/api/direction/v1/bicycling"
 	drivingV1 "github.com/enneket/amap/api/direction/v1/driving"
 	walkingV1 "github.com/enneket/amap/api/direction/v1/walking"
-
-	// v2版本API
 	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
 	busV2 "github.com/enneket/amap/api/direction/v2/bus"
 	drivingV2 "github.com/enneket/amap/api/direction/v2/driving"
 	electricV2 "github.com/enneket/amap/api/direction/v2/electric"
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
-
-	// 其他API
-distance "github.com/enneket/amap/api/distance"
-district "github.com/enneket/amap/api/district"
-geoCode "github.com/enneket/amap/api/geo_code"
-grasproad "github.com/enneket/amap/api/grasproad"
-ipconfig "github.com/enneket/amap/api/ipconfig"
-reGeoCode "github.com/enneket/amap/api/re_geo_code"
-search "github.com/enneket/amap/api/search"
-trafficIncident "github.com/enneket/amap/api/traffic-incident"
-convert "github.com/enneket/amap/api/convert"
+	distance "github.com/enneket/amap/api/distance"
+	district "github.com/enneket/amap/api/district"
+	geoCode "github.com/enneket/amap/api/geo_code"
+	grasproad "github.com/enneket/amap/api/grasproad"
+	ipconfig "github.com/enneket/amap/api/ipconfig"
+	placeV5 "github.com/enneket/amap/api/place/v5"
+	reGeoCode "github.com/enneket/amap/api/re_geo_code"
+	search "github.com/enneket/amap/api/search"
+	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
@@ -611,6 +607,132 @@ func (c *Client) AOISearch(req *search.AOISearchRequest) (*search.SearchResponse
 	// 调用核心请求方法
 	var resp search.SearchResponse
 	if err := c.DoRequest("place/aoi", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlaceSearchV5 POI搜索2.0通用搜索API调用方法
+// 支持关键词搜索、周边搜索、多边形搜索等多种搜索方式
+func (c *Client) PlaceSearchV5(req *placeV5.SearchRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0：keyword参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/text", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlaceTextSearchV5 POI搜索2.0文本搜索API调用方法
+// 基于关键词的搜索，用于查询指定区域内的POI
+func (c *Client) PlaceTextSearchV5(req *placeV5.TextSearchRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0文本搜索：keyword参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/text", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlaceAroundSearchV5 POI搜索2.0周边搜索API调用方法
+// 基于中心点和半径的搜索，用于查询指定区域内的POI
+func (c *Client) PlaceAroundSearchV5(req *placeV5.AroundSearchRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0周边搜索：keyword参数不能为空")
+	}
+	if req.Location == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0周边搜索：location参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/around", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlacePolygonSearchV5 POI搜索2.0多边形搜索API调用方法
+// 基于多边形边界的搜索，用于查询指定多边形区域内的POI
+func (c *Client) PlacePolygonSearchV5(req *placeV5.PolygonSearchRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数
+	if req.Keyword == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0多边形搜索：keyword参数不能为空")
+	}
+	if req.Polygon == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0多边形搜索：polygon参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/polygon", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlaceIDSearchV5 POI搜索2.0 ID查询API调用方法
+// 用于获取指定POI的完整数据
+func (c *Client) PlaceIDSearchV5(req *placeV5.IDRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数
+	if req.ID == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0 ID查询：id参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/detail", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// PlaceAOISearchV5 POI搜索2.0 AOI边界查询API调用方法
+// 用于获取指定AOI（兴趣面）的边界坐标
+func (c *Client) PlaceAOISearchV5(req *placeV5.AOISearchRequest) (*placeV5.SearchResponse, error) {
+	// 校验必填参数（id和location二选一）
+	if req.ID == "" && req.Location == "" {
+		return nil, amapErr.NewInvalidConfigError("POI搜索2.0 AOI查询：id和location参数不能同时为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp placeV5.SearchResponse
+	if err := c.DoRequest("v5/place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
 

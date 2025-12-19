@@ -12,24 +12,20 @@ import (
 	bicycling "github.com/enneket/amap/api/direction/v1/bicycling"
 	driving "github.com/enneket/amap/api/direction/v1/driving"
 	walking "github.com/enneket/amap/api/direction/v1/walking"
-	district "github.com/enneket/amap/api/district"
-	grasproad "github.com/enneket/amap/api/grasproad"
-	ipconfig "github.com/enneket/amap/api/ipconfig"
-	search "github.com/enneket/amap/api/search"
-	trafficIncident "github.com/enneket/amap/api/traffic-incident"
-
-	// v2版本API
 	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
 	busV2 "github.com/enneket/amap/api/direction/v2/bus"
 	drivingV2 "github.com/enneket/amap/api/direction/v2/driving"
 	electricV2 "github.com/enneket/amap/api/direction/v2/electric"
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
-
-	// 其他API
-
 	distance "github.com/enneket/amap/api/distance"
+	district "github.com/enneket/amap/api/district"
 	geoCode "github.com/enneket/amap/api/geo_code"
+	grasproad "github.com/enneket/amap/api/grasproad"
+	ipconfig "github.com/enneket/amap/api/ipconfig"
+	placeV5 "github.com/enneket/amap/api/place/v5"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
+	search "github.com/enneket/amap/api/search"
+	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	amapErr "github.com/enneket/amap/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -3726,4 +3722,191 @@ func TestAOISearch_MissingParams(t *testing.T) {
 	assert.Nil(t, resp)
 	assert.IsType(t, amapErr.InvalidConfigError(""), err)
 	assert.Contains(t, err.Error(), "id和location参数不能同时为空")
+}
+
+// TestPlaceTextSearchV5_Success 测试POI搜索2.0文本搜索成功
+func TestPlaceTextSearchV5_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回POI搜索2.0文本搜索结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "2",
+		"pois": [
+			{
+				"id": "B000A83M61",
+				"name": "北京大学",
+				"type": "141200",
+				"typecode": "141200",
+				"address": "北京市海淀区颐和园路5号",
+				"location": "116.306247,39.998235",
+				"cityname": "北京市",
+				"adname": "海淀区"
+			},
+			{
+				"id": "B000A83M62",
+				"name": "清华大学",
+				"type": "141200",
+				"typecode": "141200",
+				"address": "北京市海淀区清华园1号",
+				"location": "116.327881,40.001509",
+				"cityname": "北京市",
+				"adname": "海淀区"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，搜索北京大学
+	req := &placeV5.TextSearchRequest{
+		Keyword: "北京大学",
+		City:    "北京",
+		Types:   "141200",
+	}
+	resp, err := client.PlaceTextSearchV5(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "2", resp.Count)
+	assert.Len(t, resp.Pois, 2)
+	assert.Equal(t, "北京大学", resp.Pois[0].Name)
+	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
+	assert.Equal(t, "北京市海淀区颐和园路5号", resp.Pois[0].Address)
+	assert.Equal(t, "116.306247,39.998235", resp.Pois[0].Location)
+	assert.Equal(t, "清华大学", resp.Pois[1].Name)
+	assert.Equal(t, "海淀区", resp.Pois[1].Adname)
+}
+
+// TestPlaceTextSearchV5_MissingKeyword 测试POI搜索2.0文本搜索缺少必填参数keyword
+func TestPlaceTextSearchV5_MissingKeyword(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 执行请求，缺少keyword参数
+	req := &placeV5.TextSearchRequest{
+		City:  "北京",
+		Types: "141200",
+	}
+	resp, err := client.PlaceTextSearchV5(req)
+
+	// 3. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keyword参数不能为空")
+}
+
+// TestPlaceAroundSearchV5_Success 测试POI搜索2.0周边搜索成功
+func TestPlaceAroundSearchV5_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回POI搜索2.0周边搜索结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "2",
+		"pois": [
+			{
+				"id": "B000A83M61",
+				"name": "北京大学",
+				"type": "141200",
+				"typecode": "141200",
+				"address": "北京市海淀区颐和园路5号",
+				"location": "116.306247,39.998235",
+				"cityname": "北京市",
+				"adname": "海淀区",
+				"distance": "100"
+			},
+			{
+				"id": "B000A83M62",
+				"name": "清华大学",
+				"type": "141200",
+				"typecode": "141200",
+				"address": "北京市海淀区清华园1号",
+				"location": "116.327881,40.001509",
+				"cityname": "北京市",
+				"adname": "海淀区",
+				"distance": "200"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，周边搜索
+	req := &placeV5.AroundSearchRequest{
+		Keyword:  "大学",
+		Location: "116.306247,39.998235",
+		Radius:   "5000",
+		Types:    "141200",
+	}
+	resp, err := client.PlaceAroundSearchV5(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "2", resp.Count)
+	assert.Len(t, resp.Pois, 2)
+	assert.Equal(t, "北京大学", resp.Pois[0].Name)
+	assert.Equal(t, "100", resp.Pois[0].Distance)
+	assert.Equal(t, "清华大学", resp.Pois[1].Name)
+	assert.Equal(t, "200", resp.Pois[1].Distance)
+}
+
+// TestPlaceIDSearchV5_Success 测试POI搜索2.0 ID查询成功
+func TestPlaceIDSearchV5_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回POI搜索2.0 ID查询结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [
+			{
+				"id": "B000A83M61",
+				"name": "北京大学",
+				"type": "141200",
+				"typecode": "141200",
+				"address": "北京市海淀区颐和园路5号",
+				"location": "116.306247,39.998235",
+				"cityname": "北京市",
+				"adname": "海淀区"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，ID查询
+	req := &placeV5.IDRequest{
+		ID: "B000A83M61",
+	}
+	resp, err := client.PlaceIDSearchV5(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Pois, 1)
+	assert.Equal(t, "北京大学", resp.Pois[0].Name)
+	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
+	assert.Equal(t, "北京市海淀区颐和园路5号", resp.Pois[0].Address)
 }
