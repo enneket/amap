@@ -11,10 +11,8 @@ import (
 
 func main() {
 	// 创建配置
-	config := &amap.Config{
-		Key:     "your_amap_api_key",
-		Timeout: 30 * time.Second,
-	}
+	config := amap.NewConfig("your_amap_api_key")
+	config.Timeout = 30 * time.Second
 
 	// 初始化客户端
 	client, err := amap.NewClient(config)
