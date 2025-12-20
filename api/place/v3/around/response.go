@@ -1,4 +1,4 @@
-package search
+package around
 
 import (
 	amapType "github.com/enneket/amap/types"
@@ -7,7 +7,6 @@ import (
 // SearchResponse 高级搜索响应
 // 文档：https://lbs.amap.com/api/webservice/guide/api-advanced/search
 // 返回搜索结果，包括POI列表、分页信息等
-
 type SearchResponse struct {
 	amapType.BaseResponse // 继承基础响应（Status/Info/InfoCode）
 	Count      string     `json:"count"`      // 匹配的POI数量
@@ -19,7 +18,6 @@ type SearchResponse struct {
 
 // PoiItem POI信息
 // 包含POI的基本信息、地址、经纬度、类型等
-
 type PoiItem struct {
 	ID          string    `json:"id"`          // POI唯一标识
 	Name        string    `json:"name"`        // POI名称
@@ -64,7 +62,6 @@ type PoiItem struct {
 
 // Photo POI图片信息
 // 包含图片URL和标题
-
 type Photo struct {
 	Title string `json:"title"` // 图片标题
 	URL   string `json:"url"`   // 图片URL
@@ -72,7 +69,6 @@ type Photo struct {
 
 // IndoorData 室内地图数据
 // 包含室内POI信息
-
 type IndoorData struct {
 	Floor     string     `json:"floor"`     // 楼层
 	TrueFloor string     `json:"truefloor"` // 真实楼层
@@ -82,20 +78,18 @@ type IndoorData struct {
 
 // BizExt 业务扩展信息
 // 包含POI的业务相关信息
-
 type BizExt struct {
-	Cost      string `json:"cost,omitempty"`      // 人均消费
-	Rating    string `json:"rating,omitempty"`    // 评分
-	OpenTime  string `json:"opentime,omitempty"`  // 营业时间
-	Charge    string `json:"charge,omitempty"`    // 是否收费（0/1）
-	MCTags    string `json:"mctags,omitempty"`    // 商户标签
+	Cost        string `json:"cost,omitempty"`      // 人均消费
+	Rating      string `json:"rating,omitempty"`    // 评分
+	OpenTime    string `json:"opentime,omitempty"`  // 营业时间
+	Charge      string `json:"charge,omitempty"`    // 是否收费（0/1）
+	MCTags      string `json:"mctags,omitempty"`    // 商户标签
 	SpecialTags string `json:"specialtags,omitempty"` // 特色标签
-	FoodType  string `json:"foodtype,omitempty"`  // 餐饮类型
+	FoodType    string `json:"foodtype,omitempty"`  // 餐饮类型
 }
 
 // Event 活动信息
 // 包含POI相关的活动信息
-
 type Event struct {
 	StartTime string `json:"start_time,omitempty"` // 活动开始时间
 	EndTime   string `json:"end_time,omitempty"`   // 活动结束时间
@@ -106,7 +100,6 @@ type Event struct {
 
 // Suggestion 建议词列表
 // 包含搜索建议和城市建议
-
 type Suggestion struct {
 	Keywords []string `json:"keywords"` // 搜索建议词列表
 	Cities   []string `json:"cities"`   // 城市建议列表
@@ -114,7 +107,6 @@ type Suggestion struct {
 
 // InfoData 附加信息列表
 // 包含搜索结果的附加信息
-
 type InfoData struct {
 	Type     string `json:"type"`     // 信息类型
 	Content  string `json:"content"`  // 信息内容
@@ -123,7 +115,6 @@ type InfoData struct {
 
 // UserLocation 用户位置信息
 // 包含用户的经纬度坐标
-
 type UserLocation struct {
 	Location string `json:"location"` // 用户坐标（经度,纬度）
 }

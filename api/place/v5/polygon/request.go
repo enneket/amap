@@ -1,4 +1,4 @@
-package v5
+package polygon
 
 // PolygonSearchRequest POI搜索2.0多边形搜索请求参数
 // 文档：https://lbs.amap.com/api/webservice/guide/api-advanced/newpoisearch

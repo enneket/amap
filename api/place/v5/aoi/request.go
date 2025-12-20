@@ -1,4 +1,4 @@
-package v5
+package aoi
 
 // AOISearchRequest POI搜索2.0 AOI查询请求参数
 // 文档：https://lbs.amap.com/api/webservice/guide/api-advanced/newpoisearch

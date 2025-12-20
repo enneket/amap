@@ -1,4 +1,4 @@
-package v5
+package id
 
 import (
 	amapType "github.com/enneket/amap/types"

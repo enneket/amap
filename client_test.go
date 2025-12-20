@@ -22,9 +22,17 @@ import (
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	ipconfig "github.com/enneket/amap/api/ipconfig"
-	placeV5 "github.com/enneket/amap/api/place/v5"
+	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
+	placev3around "github.com/enneket/amap/api/place/v3/around"
+	placev3id "github.com/enneket/amap/api/place/v3/id"
+	placev3polygon "github.com/enneket/amap/api/place/v3/polygon"
+	placev3text "github.com/enneket/amap/api/place/v3/text"
+	placev5aoi "github.com/enneket/amap/api/place/v5/aoi"
+	placev5around "github.com/enneket/amap/api/place/v5/around"
+	placev5id "github.com/enneket/amap/api/place/v5/id"
+	placev5polygon "github.com/enneket/amap/api/place/v5/polygon"
+	placev5text "github.com/enneket/amap/api/place/v5/text"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
-	search "github.com/enneket/amap/api/search"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	amapErr "github.com/enneket/amap/errors"
 	"github.com/stretchr/testify/assert"
@@ -97,6 +105,331 @@ func TestDoRequest_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestPlaceV3ID_Success 测试PlaceV3ID方法成功
+func TestPlaceV3ID_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"name": "测试POI",
+		"type": "010000",
+		"location": "116.397428,39.90923"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev3id.IDRequest{ID: "B000A83M61"}
+	resp, err := client.PlaceV3ID(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestPlaceV3Text_Success 测试PlaceV3Text方法成功
+func TestPlaceV3Text_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev3text.TextSearchRequest{}
+	resp, err := client.PlaceV3Text(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV3Around_Success 测试PlaceV3Around方法成功
+func TestPlaceV3Around_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev3around.AroundSearchRequest{Location: "116.397428,39.90923"}
+	resp, err := client.PlaceV3Around(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV3Polygon_Success 测试PlaceV3Polygon方法成功
+func TestPlaceV3Polygon_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev3polygon.PolygonSearchRequest{}
+	resp, err := client.PlaceV3Polygon(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV3AOI_Success 测试PlaceV3AOI方法成功
+func TestPlaceV3AOI_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev3aoi.AOISearchRequest{}
+	resp, err := client.PlaceV3AOI(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV5ID_Success 测试PlaceV5ID方法成功
+func TestPlaceV5ID_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev5id.IDRequest{ID: "B000A83M61"}
+	resp, err := client.PlaceV5ID(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestPlaceV5Text_Success 测试PlaceV5Text方法成功
+func TestPlaceV5Text_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev5text.TextSearchRequest{Keyword: "测试"}
+	resp, err := client.PlaceV5Text(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV5Around_Success 测试PlaceV5Around方法成功
+func TestPlaceV5Around_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev5around.AroundSearchRequest{Location: "116.397428,39.90923"}
+	resp, err := client.PlaceV5Around(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV5Polygon_Success 测试PlaceV5Polygon方法成功
+func TestPlaceV5Polygon_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev5polygon.PolygonSearchRequest{Polygon: "116.397428,39.90923;116.407428,39.90923"}
+	resp, err := client.PlaceV5Polygon(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
+}
+
+// TestPlaceV5AOI_Success 测试PlaceV5AOI方法成功
+func TestPlaceV5AOI_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"pois": [{
+			"id": "B000A83M61",
+			"name": "测试POI",
+			"type": "010000",
+			"location": "116.397428,39.90923"
+		}]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &placev5aoi.AOISearchRequest{ID: "B000A83M61"}
+	resp, err := client.PlaceV5AOI(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Count)
 }
 
 // TestDoRequest_ParseError 测试响应解析错误
@@ -3238,675 +3571,3 @@ func TestGraspRoad_WithExtensionsAll(t *testing.T) {
 }
 
 // -------------------------- 高级搜索测试 --------------------------
-
-// TestSearch_Success 测试Search方法正常搜索成功
-func TestSearch_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回正常搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"tel": "010-62752114",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村",
-				"rating": "4.9",
-				"tags": "985工程,211工程,双一流,综合性大学"
-			},
-			{
-				"id": "B000A83M62",
-				"name": "清华大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区清华园1号",
-				"location": "116.327299,40.003896",
-				"tel": "010-62782114",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "五道口",
-				"rating": "4.8",
-				"tags": "985工程,211工程,双一流,综合性大学"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，搜索北京大学
-	req := &search.SearchRequest{
-		Keyword: "北京大学",
-		City:    "北京",
-		Types:   "141200",
-	}
-	resp, err := client.Search(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Pois, 2)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
-	assert.Equal(t, "北京市海淀区颐和园路5号", resp.Pois[0].Address)
-	assert.Equal(t, "116.306247,39.998235", resp.Pois[0].Location)
-	assert.Equal(t, "清华大学", resp.Pois[1].Name)
-	assert.Equal(t, "海淀区", resp.Pois[1].Adname)
-}
-
-// TestSearch_MissingKeyword 测试Search方法缺少必填参数keyword
-func TestSearch_MissingKeyword(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 执行请求，缺少keyword参数
-	req := &search.SearchRequest{
-		City:  "北京",
-		Types: "141200",
-	}
-	resp, err := client.Search(req)
-
-	// 3. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keyword参数不能为空")
-}
-
-// TestSearch_APIError 测试Search方法API返回错误
-func TestSearch_APIError(t *testing.T) {
-	// 1. 创建mock服务器，返回API错误
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求
-	req := &search.SearchRequest{
-		Keyword: "北京大学",
-		City:    "北京",
-	}
-	resp, err := client.Search(req)
-
-	// 4. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// TestSearch_WithExtensionsAll 测试Search方法使用extensions=all
-func TestSearch_WithExtensionsAll(t *testing.T) {
-	// 1. 创建mock服务器，返回带详细信息的搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"tel": "010-62752114",
-				"website": "https://www.pku.edu.cn/",
-				"email": "office@pku.edu.cn",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村",
-				"rating": "4.9",
-				"cost": "0",
-				"opentime": "00:00-24:00",
-				"tags": "985工程,211工程,双一流,综合性大学",
-				"photos": [
-					{
-						"title": "北京大学正门",
-						"url": "https://example.com/pku.jpg"
-					}
-				],
-				"biz_ext": {
-					"cost": "0",
-					"rating": "4.9",
-					"opentime": "00:00-24:00",
-					"charge": "0",
-					"specialtags": "985工程,211工程,双一流"
-				}
-			}
-		],
-		"suggestion": {
-			"keywords": ["北京大学附属中学", "北京大学人民医院", "北京大学第三医院"],
-			"cities": ["北京市", "上海市", "广州市"]
-		}
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，使用extensions=all
-	req := &search.SearchRequest{
-		Keyword:    "北京大学",
-		City:       "北京",
-		Extensions: "all",
-	}
-	resp, err := client.Search(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Pois, 1)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.NotEmpty(t, resp.Pois[0].Website)
-	assert.NotEmpty(t, resp.Pois[0].Email)
-	assert.Len(t, resp.Pois[0].Photos, 1)
-	assert.Equal(t, "北京大学正门", resp.Pois[0].Photos[0].Title)
-	assert.NotNil(t, resp.Pois[0].BizExt)
-	assert.Equal(t, "4.9", resp.Pois[0].BizExt.Rating)
-	assert.NotNil(t, resp.Suggestion)
-	assert.Len(t, resp.Suggestion.Keywords, 3)
-	assert.Len(t, resp.Suggestion.Cities, 3)
-}
-
-// TestAroundSearch_Success 测试AroundSearch方法正常周边搜索成功
-func TestAroundSearch_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回正常周边搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"pois": [
-			{
-				"id": "B000A83M63",
-				"name": "中关村广场",
-				"type": "购物服务,购物中心,商业综合体",
-				"typecode": "060100",
-				"address": "北京市海淀区中关村大街15号",
-				"location": "116.319903,39.984639",
-				"tel": "010-82886688",
-				"distance": "500",
-				"direction": "东南",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村"
-			},
-			{
-				"id": "B000A83M64",
-				"name": "海龙大厦",
-				"type": "购物服务,数码电子,电子市场",
-				"typecode": "060400",
-				"address": "北京市海淀区中关村大街1号",
-				"location": "116.319448,39.985127",
-				"tel": "010-82663288",
-				"distance": "300",
-				"direction": "东",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，周边搜索购物中心
-	req := &search.AroundSearchRequest{
-		Keyword:  "购物中心",
-		Location: "116.320000,39.985000",
-		Radius:   "1000",
-		Sortrule: "1", // 按距离排序
-	}
-	resp, err := client.AroundSearch(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Pois, 2)
-	assert.Equal(t, "中关村广场", resp.Pois[0].Name)
-	assert.Equal(t, "500", resp.Pois[0].Distance)
-	assert.Equal(t, "海龙大厦", resp.Pois[1].Name)
-	assert.Equal(t, "300", resp.Pois[1].Distance)
-}
-
-// TestPolygonSearch_Success 测试PolygonSearch方法正常多边形搜索成功
-func TestPolygonSearch_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回正常多边形搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"pois": [
-			{
-				"id": "B000A83M65",
-				"name": "北京大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"tel": "010-62752114",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村"
-			},
-			{
-				"id": "B000A83M66",
-				"name": "清华大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区清华园1号",
-				"location": "116.327299,40.003896",
-				"tel": "010-62782114",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "五道口"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，多边形搜索大学
-	req := &search.PolygonSearchRequest{
-		Keyword: "大学",
-		Polygon: "116.290000,39.980000;116.340000,39.980000;116.340000,40.010000;116.290000,40.010000",
-	}
-	resp, err := client.PolygonSearch(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Pois, 2)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "清华大学", resp.Pois[1].Name)
-	assert.Equal(t, "141200", resp.Pois[1].TypeCode)
-}
-
-// TestIDSearch_Success 测试IDSearch方法正常ID查询成功
-func TestIDSearch_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回正常ID查询结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "教育,高等院校,985工程,211工程",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"tel": "010-62752114",
-				"website": "https://www.pku.edu.cn/",
-				"email": "office@pku.edu.cn",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110108",
-				"adname": "海淀区",
-				"business_area": "中关村",
-				"rating": "4.9",
-				"opentime": "00:00-24:00",
-				"tags": "985工程,211工程,双一流,综合性大学"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，ID查询北京大学
-	req := &search.IDRequest{
-		ID:         "B000A83M61",
-		Extensions: "all",
-	}
-	resp, err := client.IDSearch(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Pois, 1)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
-	assert.NotEmpty(t, resp.Pois[0].Website)
-	assert.Equal(t, "https://www.pku.edu.cn/", resp.Pois[0].Website)
-	assert.Equal(t, "4.9", resp.Pois[0].Rating)
-}
-
-// TestAOISearch_Success 测试AOISearch方法正常AOI边界查询成功
-func TestAOISearch_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回正常AOI边界查询结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"pois": [
-			{
-				"id": "AOI123456",
-				"name": "奥林匹克公园",
-				"type": "风景名胜,公园广场,城市公园",
-				"typecode": "110100",
-				"location": "116.391265,39.999455",
-				"pcode": "110000",
-				"pname": "北京市",
-				"citycode": "010",
-				"cityname": "北京市",
-				"adcode": "110105",
-				"adname": "朝阳区",
-				"polyline": "116.388000,39.997000;116.394000,39.997000;116.394000,40.002000;116.388000,40.002000;116.388000,39.997000"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，AOI边界查询奥林匹克公园
-	req := &search.AOISearchRequest{
-		Location:   "116.391265,39.999455",
-		Extensions: "all",
-	}
-	resp, err := client.AOISearch(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Pois, 1)
-	assert.Equal(t, "奥林匹克公园", resp.Pois[0].Name)
-	assert.Equal(t, "AOI123456", resp.Pois[0].ID)
-	assert.NotEmpty(t, resp.Pois[0].Polyline)
-	assert.Contains(t, resp.Pois[0].Polyline, "116.388000,39.997000")
-}
-
-// TestAOISearch_MissingParams 测试AOISearch方法缺少必填参数
-func TestAOISearch_MissingParams(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 执行请求，缺少id和location参数
-	req := &search.AOISearchRequest{
-		Types: "110100",
-	}
-	resp, err := client.AOISearch(req)
-
-	// 3. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "id和location参数不能同时为空")
-}
-
-// TestPlaceTextSearchV5_Success 测试POI搜索2.0文本搜索成功
-func TestPlaceTextSearchV5_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回POI搜索2.0文本搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "141200",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"cityname": "北京市",
-				"adname": "海淀区"
-			},
-			{
-				"id": "B000A83M62",
-				"name": "清华大学",
-				"type": "141200",
-				"typecode": "141200",
-				"address": "北京市海淀区清华园1号",
-				"location": "116.327881,40.001509",
-				"cityname": "北京市",
-				"adname": "海淀区"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，搜索北京大学
-	req := &placeV5.TextSearchRequest{
-		Keyword: "北京大学",
-		City:    "北京",
-		Types:   "141200",
-	}
-	resp, err := client.PlaceTextSearchV5(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Pois, 2)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
-	assert.Equal(t, "北京市海淀区颐和园路5号", resp.Pois[0].Address)
-	assert.Equal(t, "116.306247,39.998235", resp.Pois[0].Location)
-	assert.Equal(t, "清华大学", resp.Pois[1].Name)
-	assert.Equal(t, "海淀区", resp.Pois[1].Adname)
-}
-
-// TestPlaceTextSearchV5_MissingKeyword 测试POI搜索2.0文本搜索缺少必填参数keyword
-func TestPlaceTextSearchV5_MissingKeyword(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 执行请求，缺少keyword参数
-	req := &placeV5.TextSearchRequest{
-		City:  "北京",
-		Types: "141200",
-	}
-	resp, err := client.PlaceTextSearchV5(req)
-
-	// 3. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keyword参数不能为空")
-}
-
-// TestPlaceAroundSearchV5_Success 测试POI搜索2.0周边搜索成功
-func TestPlaceAroundSearchV5_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回POI搜索2.0周边搜索结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "141200",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"cityname": "北京市",
-				"adname": "海淀区",
-				"distance": "100"
-			},
-			{
-				"id": "B000A83M62",
-				"name": "清华大学",
-				"type": "141200",
-				"typecode": "141200",
-				"address": "北京市海淀区清华园1号",
-				"location": "116.327881,40.001509",
-				"cityname": "北京市",
-				"adname": "海淀区",
-				"distance": "200"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，周边搜索
-	req := &placeV5.AroundSearchRequest{
-		Keyword:  "大学",
-		Location: "116.306247,39.998235",
-		Radius:   "5000",
-		Types:    "141200",
-	}
-	resp, err := client.PlaceAroundSearchV5(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Pois, 2)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "100", resp.Pois[0].Distance)
-	assert.Equal(t, "清华大学", resp.Pois[1].Name)
-	assert.Equal(t, "200", resp.Pois[1].Distance)
-}
-
-// TestPlaceIDSearchV5_Success 测试POI搜索2.0 ID查询成功
-func TestPlaceIDSearchV5_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回POI搜索2.0 ID查询结果
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"pois": [
-			{
-				"id": "B000A83M61",
-				"name": "北京大学",
-				"type": "141200",
-				"typecode": "141200",
-				"address": "北京市海淀区颐和园路5号",
-				"location": "116.306247,39.998235",
-				"cityname": "北京市",
-				"adname": "海淀区"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例
-	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 执行请求，ID查询
-	req := &placeV5.IDRequest{
-		ID: "B000A83M61",
-	}
-	resp, err := client.PlaceIDSearchV5(req)
-
-	// 4. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Pois, 1)
-	assert.Equal(t, "北京大学", resp.Pois[0].Name)
-	assert.Equal(t, "B000A83M61", resp.Pois[0].ID)
-	assert.Equal(t, "北京市海淀区颐和园路5号", resp.Pois[0].Address)
-}

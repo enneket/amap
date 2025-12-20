@@ -1,13 +1,13 @@
-package v5
+package id
 
 // IDRequest POI搜索2.0 ID查询请求参数
 // 文档：https://lbs.amap.com/api/webservice/guide/api-advanced/newpoisearch
 // 根据POI ID查询详细信息
 
 type IDRequest struct {
-	ID          string `json:"id"`          // POI ID（必填）
-	Extensions  string `json:"extensions,omitempty"`  // 返回结果类型（可选，base/all，默认base）
-	Language    string `json:"language,omitempty"`   // 语言（可选，默认中文）
+	ID         string `json:"id"`                   // POI ID（必填）
+	Extensions string `json:"extensions,omitempty"` // 返回结果类型（可选，base/all，默认base）
+	Language   string `json:"language,omitempty"`   // 语言（可选，默认中文）
 }
 
 // ToParams 将ID查询请求参数转换为map[string]string格式
