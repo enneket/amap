@@ -23,6 +23,7 @@ import (
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
 	distance "github.com/enneket/amap/api/distance"
 	district "github.com/enneket/amap/api/district"
+	etdDrivingV4 "github.com/enneket/amap/api/etd/v4/driving"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
@@ -370,6 +371,35 @@ func (c *Client) ElectricV2(req *electricV2.ElectricRequestV2) (*electricV2.Elec
 	// 调用核心请求方法
 	var resp electricV2.ElectricResponseV2
 	if err := c.DoRequest("direction/v2/electric", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// ETDDrivingV4 未来驾车路径规划API调用方法（v4）
+func (c *Client) ETDDrivingV4(req *etdDrivingV4.ETDDrivingRequestV4) (*etdDrivingV4.ETDDrivingResponseV4, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("未来驾车路径规划v4：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("未来驾车路径规划v4：destination参数不能为空")
+	}
+	if req.DepartureTime == "" {
+		return nil, amapErr.NewInvalidConfigError("未来驾车路径规划v4：departure_time参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("未来驾车路径规划v4：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp etdDrivingV4.ETDDrivingResponseV4
+	if err := c.DoRequest("v4/etd/driving", params, &resp); err != nil {
 		return nil, err
 	}
 

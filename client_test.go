@@ -23,6 +23,7 @@ import (
 	walkingV2 "github.com/enneket/amap/api/direction/v2/walking"
 	distance "github.com/enneket/amap/api/distance"
 	district "github.com/enneket/amap/api/district"
+	etdDrivingV4 "github.com/enneket/amap/api/etd/v4/driving"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
@@ -2214,6 +2215,146 @@ func TestDrivingV2_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 未来驾车路径规划v4测试 --------------------------
+
+// TestETDDrivingV4_Success 测试ETDDrivingV4方法正常请求成功
+func TestETDDrivingV4_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回未来驾车路径规划v4成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"route": {
+			"origin": "116.351147,39.936871",
+			"destination": "116.410001,39.910113",
+			"paths": [
+				{
+					"distance": "5237",
+					"duration": "240",
+					"steps": [
+						{
+							"instruction": "沿建国路向东行驶1.2公里",
+							"orientation": "东",
+							"road": "建国路",
+							"distance": "1200",
+							"duration": "60",
+							"polyline": "116.351147,39.936871;116.352247,39.936771"
+						}
+					],
+					"polyline": "116.351147,39.936871;116.352247,39.936771;116.410001,39.910113",
+					"tolls": "5"
+				}
+			],
+			"distance": "5237",
+			"duration": "240",
+			"tolls": "5",
+			"etd": "2025-01-01 08:00",
+			"eta": "2025-01-01 08:30"
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &etdDrivingV4.ETDDrivingRequestV4{
+		Origin:        "116.351147,39.936871",
+		Destination:   "116.410001,39.910113",
+		DepartureTime: "2025-01-01 08:00",
+	}
+
+	// 4. 执行未来驾车路径规划v4请求
+	resp, err := client.ETDDrivingV4(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "116.351147,39.936871", resp.Route.Origin)
+	assert.Equal(t, "116.410001,39.910113", resp.Route.Destination)
+	assert.Equal(t, "5237", resp.Route.Distance)
+	assert.Equal(t, "240", resp.Route.Duration)
+	assert.Equal(t, "5", resp.Route.Tolls)
+	assert.Equal(t, "2025-01-01 08:00", resp.Route.ETD)
+	assert.Equal(t, "2025-01-01 08:30", resp.Route.ETA)
+	assert.Len(t, resp.Route.Paths, 1)
+}
+
+// TestETDDrivingV4_MissingOrigin 测试ETDDrivingV4方法缺少必填参数Origin
+func TestETDDrivingV4_MissingOrigin(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Origin的请求参数
+	req := &etdDrivingV4.ETDDrivingRequestV4{
+		Destination:   "116.410001,39.910113",
+		DepartureTime: "2025-01-01 08:00",
+	}
+
+	// 3. 执行未来驾车路径规划v4请求
+	resp, err := client.ETDDrivingV4(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "origin参数不能为空")
+}
+
+// TestETDDrivingV4_MissingDestination 测试ETDDrivingV4方法缺少必填参数Destination
+func TestETDDrivingV4_MissingDestination(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Destination的请求参数
+	req := &etdDrivingV4.ETDDrivingRequestV4{
+		Origin:        "116.351147,39.936871",
+		DepartureTime: "2025-01-01 08:00",
+	}
+
+	// 3. 执行未来驾车路径规划v4请求
+	resp, err := client.ETDDrivingV4(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "destination参数不能为空")
+}
+
+// TestETDDrivingV4_MissingDepartureTime 测试ETDDrivingV4方法缺少必填参数DepartureTime
+func TestETDDrivingV4_MissingDepartureTime(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少DepartureTime的请求参数
+	req := &etdDrivingV4.ETDDrivingRequestV4{
+		Origin:      "116.351147,39.936871",
+		Destination: "116.410001,39.910113",
+	}
+
+	// 3. 执行未来驾车路径规划v4请求
+	resp, err := client.ETDDrivingV4(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "departure_time参数不能为空")
 }
 
 // -------------------------- 骑行路径规划v2测试 --------------------------
