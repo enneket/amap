@@ -84,7 +84,7 @@ func TestDoRequest_Success(t *testing.T) {
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -109,7 +109,7 @@ func TestDoRequest_APIError(t *testing.T) {
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err)
@@ -458,7 +458,7 @@ func TestDoRequest_ParseError(t *testing.T) {
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err)
@@ -476,7 +476,7 @@ func TestDoRequest_NetworkError(t *testing.T) {
 
 	// 2. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, "test/path", nil, &resp)
 
 	// 3. 验证结果
 	assert.Error(t, err)
@@ -512,7 +512,7 @@ func TestDoRequest_WithSignature(t *testing.T) {
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -556,7 +556,7 @@ func TestDoRequest_PublicParams(t *testing.T) {
 	var resp TestResponse
 	customUserAgent := "test-agent/1.0"
 	config.UserAgent = customUserAgent
-	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1", "param2": ""}, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", map[string]string{"param1": "value1", "param2": ""}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -591,7 +591,7 @@ func TestDoRequest_InvalidJSON(t *testing.T) {
 	var resp struct {
 		Result string `json:"result"` // 期望string类型，但实际是object
 	}
-	err = client.DoRequest("test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, "test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err) // 应该返回JSON解析错误
@@ -623,7 +623,7 @@ func TestBuildPublicParams(t *testing.T) {
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", nil, &resp)
 	require.NoError(t, err)
 
 	// 4. 验证时间戳格式正确

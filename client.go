@@ -73,33 +73,45 @@ func NewClient(cfg *Config) (*Client, error) {
 }
 
 // DoRequest 通用请求方法（封装公共参数、签名、响应解析）
-func (c *Client) DoRequest(path string, params map[string]string, resp interface{}) error {
+func (c *Client) DoRequest(method string, path string, params map[string]string, resp interface{}) error {
 	// 1. 合并公共参数（Key、签名、Timestamp 等）
 	allParams := c.buildPublicParams(params)
 	// 2. 签名（如果配置了 SecurityKey）
 	if c.config.SecurityKey != "" {
 		allParams["sig"] = utils.Sign(allParams, c.config.SecurityKey)
 	}
-	// 3. 构建请求 URL
-	fullURL := path + "?" + utils.EncodeParams(allParams, true)
-	// 4. 发送 HTTP 请求
-	req, _ := http.NewRequest(http.MethodGet, fullURL, nil)
+	// 3. 根据请求方法构建请求
+	var req *http.Request
+	var err error
+	if method == http.MethodGet {
+		// GET 请求：参数拼接到 URL
+		fullURL := path + "?" + utils.EncodeParams(allParams, true)
+		req, _ = http.NewRequest(method, fullURL, nil)
+	} else if method == http.MethodPost {
+		// POST 请求：参数作为请求体
+		req, _ = http.NewRequest(method, path, strings.NewReader(utils.EncodeParams(allParams, true)))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		return amapErr.NewInvalidConfigError("不支持的请求方法：" + method)
+	}
+	// 4. 设置请求头
 	req.Header.Set("User-Agent", c.config.UserAgent)
+	// 5. 发送 HTTP 请求
 	rawResp, err := c.httpClient.Do(req)
 	if err != nil {
 		return amapErr.NewNetworkError(err.Error())
 	}
 	defer rawResp.Body.Close()
-	// 5. 解析响应（先解析基础响应，再解析业务响应）
+	// 6. 解析响应（先解析基础响应，再解析业务响应）
 	baseResp, _, err := amapType.ReadBaseResponse(rawResp.Body)
 	if err != nil {
 		return err
 	}
-	// 6. 校验 API 错误
+	// 7. 校验 API 错误
 	if baseResp.Status != "1" {
 		return amapErr.NewAPIError(baseResp.InfoCode, baseResp.Info)
 	}
-	// 7. 解析到业务响应结构体
+	// 8. 解析到业务响应结构体
 	return json.Unmarshal(baseResp.RawJSON, resp)
 }
 
@@ -131,7 +143,7 @@ func (c *Client) GeoCode(req *geoCode.GeocodeRequest) (*geoCode.GeoCodeResponse,
 
 	// 调用核心请求方法
 	var resp geoCode.GeoCodeResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/geocode/geo", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, geoCode.API_PATH, params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -162,7 +174,7 @@ func (c *Client) ReGeocode(req *reGeoCode.ReGeocodeRequest) (*reGeoCode.ReGeocod
 
 	// 调用核心请求方法
 	var resp reGeoCode.ReGeocodeResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/geocode/regeo", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/geocode/regeo", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +200,7 @@ func (c *Client) Walking(req *walkingV1.WalkingRequest) (*walkingV1.WalkingRespo
 
 	// 调用核心请求方法
 	var resp walkingV1.WalkingResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/walking", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/walking", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -214,7 +226,7 @@ func (c *Client) Driving(req *drivingV1.DrivingRequest) (*drivingV1.DrivingRespo
 
 	// 调用核心请求方法
 	var resp drivingV1.DrivingResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/driving", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/driving", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -240,7 +252,7 @@ func (c *Client) Bicycling(req *bicyclingV1.BicyclingRequest) (*bicyclingV1.Bicy
 
 	// 调用核心请求方法
 	var resp bicyclingV1.BicyclingResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/bicycling", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/bicycling", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -266,7 +278,7 @@ func (c *Client) WalkingV2(req *walkingV2.WalkingRequestV2) (*walkingV2.WalkingR
 
 	// 调用核心请求方法
 	var resp walkingV2.WalkingResponseV2
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/v2/walking", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/v2/walking", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -292,7 +304,7 @@ func (c *Client) DrivingV2(req *drivingV2.DrivingRequestV2) (*drivingV2.DrivingR
 
 	// 调用核心请求方法
 	var resp drivingV2.DrivingResponseV2
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/v2/driving", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/v2/driving", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -318,7 +330,7 @@ func (c *Client) BicyclingV2(req *bicyclingV2.BicyclingRequestV2) (*bicyclingV2.
 
 	// 调用核心请求方法
 	var resp bicyclingV2.BicyclingResponseV2
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/v2/bicycling", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/v2/bicycling", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -344,7 +356,7 @@ func (c *Client) BusV2(req *busV2.BusRequestV2) (*busV2.BusResponseV2, error) {
 
 	// 调用核心请求方法
 	var resp busV2.BusResponseV2
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/v2/transit/integrated", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/v2/transit/integrated", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -370,7 +382,7 @@ func (c *Client) ElectricV2(req *electricV2.ElectricRequestV2) (*electricV2.Elec
 
 	// 调用核心请求方法
 	var resp electricV2.ElectricResponseV2
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/v2/electric", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/v2/electric", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -399,7 +411,7 @@ func (c *Client) ETDDrivingV4(req *etdDrivingV4.ETDDrivingRequestV4) (*etdDrivin
 
 	// 调用核心请求方法
 	var resp etdDrivingV4.ETDDrivingResponseV4
-	if err := c.DoRequest("https://restapi.amap.com/v3/v4/etd/driving", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v4/etd/driving", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -426,7 +438,7 @@ func (c *Client) Distance(req *distance.DistanceRequest) (*distance.DistanceResp
 
 	// 调用核心请求方法
 	var resp distance.DistanceResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/direction/distance", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/distance", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -446,7 +458,7 @@ func (c *Client) District(req *district.DistrictRequest) (*district.DistrictResp
 
 	// 调用核心请求方法
 	var resp district.DistrictResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/config/district", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/config/district", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -483,7 +495,7 @@ func (c *Client) TrafficIncident(req *trafficIncident.TrafficIncidentRequest) (*
 
 	// 调用核心请求方法
 	var resp trafficIncident.TrafficIncidentResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/traffic/status", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/traffic/status", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -503,7 +515,7 @@ func (c *Client) IPConfig(req *ipV3.IPConfigRequest) (*ipV3.IPConfigResponse, er
 
 	// 调用核心请求方法
 	var resp ipV3.IPConfigResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/ip", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/ip", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -523,7 +535,7 @@ func (c *Client) IPV5Config(req *ipV5.IPConfigRequest) (*ipV5.IPConfigResponse, 
 
 	// 调用核心请求方法
 	var resp ipV5.IPConfigResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/ip", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/ip", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -547,7 +559,7 @@ func (c *Client) Convert(req *convert.ConvertRequest) (*convert.ConvertResponse,
 
 	// 调用核心请求方法
 	var resp convert.ConvertResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/convert", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/convert", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -570,7 +582,7 @@ func (c *Client) GraspRoad(req *grasproad.GraspRoadRequest) (*grasproad.GraspRoa
 
 	// 调用核心请求方法
 	var resp grasproad.GraspRoadResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/grasproad", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/grasproad", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -590,7 +602,7 @@ func (c *Client) PlaceV3ID(req *placev3id.IDRequest) (*placev3id.IDResponse, err
 
 	// 调用核心请求方法
 	var resp placev3id.IDResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/place/detail", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/place/detail", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -605,7 +617,7 @@ func (c *Client) PlaceV3Text(req *placev3text.TextSearchRequest) (*placev3text.T
 
 	// 调用核心请求方法
 	var resp placev3text.TextSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/place/text", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/place/text", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -625,7 +637,7 @@ func (c *Client) PlaceV3Around(req *placev3around.AroundSearchRequest) (*placev3
 
 	// 调用核心请求方法
 	var resp placev3around.AroundSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/place/around", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/place/around", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -640,7 +652,7 @@ func (c *Client) PlaceV3Polygon(req *placev3polygon.PolygonSearchRequest) (*plac
 
 	// 调用核心请求方法
 	var resp placev3polygon.PolygonSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/place/polygon", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/place/polygon", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -655,7 +667,7 @@ func (c *Client) PlaceV3AOI(req *placev3aoi.AOISearchRequest) (*placev3aoi.AOISe
 
 	// 调用核心请求方法
 	var resp placev3aoi.AOISearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/place/aoi", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -675,7 +687,7 @@ func (c *Client) PlaceV5ID(req *placev5id.IDRequest) (*placev5id.IDResponse, err
 
 	// 调用核心请求方法
 	var resp placev5id.IDResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/place/detail", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/place/detail", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -695,7 +707,7 @@ func (c *Client) PlaceV5Text(req *placev5text.TextSearchRequest) (*placev5text.T
 
 	// 调用核心请求方法
 	var resp placev5text.TextSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/place/text", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/place/text", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -710,7 +722,7 @@ func (c *Client) PlaceV5Around(req *placev5around.AroundSearchRequest) (*placev5
 
 	// 调用核心请求方法
 	var resp placev5around.AroundSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/place/around", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/place/around", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -725,7 +737,7 @@ func (c *Client) PlaceV5Polygon(req *placev5polygon.PolygonSearchRequest) (*plac
 
 	// 调用核心请求方法
 	var resp placev5polygon.PolygonSearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/place/polygon", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/place/polygon", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -740,7 +752,7 @@ func (c *Client) PlaceV5AOI(req *placev5aoi.AOISearchRequest) (*placev5aoi.AOISe
 
 	// 调用核心请求方法
 	var resp placev5aoi.AOISearchResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/place/aoi", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -760,7 +772,7 @@ func (c *Client) Inputtips(req *inputtips.InputtipsRequest) (*inputtips.Inputtip
 
 	// 调用核心请求方法
 	var resp inputtips.InputtipsResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/assistant/inputtips", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/assistant/inputtips", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -780,7 +792,7 @@ func (c *Client) Weatherinfo(req *weatherinfo.WeatherinfoRequest) (*weatherinfo.
 
 	// 调用核心请求方法
 	var resp weatherinfo.WeatherinfoResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/weather/weatherInfo", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/weather/weatherInfo", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -795,7 +807,7 @@ func (c *Client) HardwarePosition(req *positionV1.HardwarePositionRequest) (*pos
 
 	// 调用核心请求方法
 	var resp positionV1.HardwarePositionResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/position/v1/hardware", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/position/v1/hardware", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -810,7 +822,7 @@ func (c *Client) HardwarePositionV5(req *positionV5.HardwarePositionRequest) (*p
 
 	// 调用核心请求方法
 	var resp positionV5.HardwarePositionResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v5/position/hardware", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v5/position/hardware", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -830,7 +842,7 @@ func (c *Client) LineTrafficStatus(req *line.LineTrafficRequest) (*line.LineTraf
 
 	// 调用核心请求方法
 	var resp line.LineTrafficResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v3/traffic/status/road", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v3/traffic/status/road", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -853,7 +865,7 @@ func (c *Client) CircleTrafficStatus(req *circle.CircleTrafficRequest) (*circle.
 
 	// 调用核心请求方法
 	var resp circle.CircleTrafficResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v3/traffic/status/circle", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v3/traffic/status/circle", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -873,7 +885,7 @@ func (c *Client) RectangleTrafficStatus(req *rectangle.RectangleTrafficRequest) 
 
 	// 调用核心请求方法
 	var resp rectangle.RectangleTrafficResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/v3/traffic/status/rectangle", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/v3/traffic/status/rectangle", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -896,7 +908,7 @@ func (c *Client) BusStationID(req *busStationID.StationIDRequest) (*busStationID
 
 	// 调用核心请求方法
 	var resp busStationID.StationIDResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/bus/linename", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/bus/linename", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -919,7 +931,7 @@ func (c *Client) BusStationKeyword(req *busStationKeyword.StationKeywordRequest)
 
 	// 调用核心请求方法
 	var resp busStationKeyword.StationKeywordResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/bus/station/search", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/bus/station/search", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -942,7 +954,7 @@ func (c *Client) BusLineID(req *busLineID.LineIDRequest) (*busLineID.LineIDRespo
 
 	// 调用核心请求方法
 	var resp busLineID.LineIDResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/bus/lineid", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/bus/lineid", params, &resp); err != nil {
 		return nil, err
 	}
 
@@ -965,7 +977,7 @@ func (c *Client) BusLineKeyword(req *busLineKeyword.LineKeywordRequest) (*busLin
 
 	// 调用核心请求方法
 	var resp busLineKeyword.LineKeywordResponse
-	if err := c.DoRequest("https://restapi.amap.com/v3/bus/line/search", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/bus/line/search", params, &resp); err != nil {
 		return nil, err
 	}
 
