@@ -200,7 +200,7 @@ func (c *Client) Walking(req *walkingV1.WalkingRequest) (*walkingV1.WalkingRespo
 
 	// 调用核心请求方法
 	var resp walkingV1.WalkingResponse
-	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/walking", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, walkingV1.API_PATH, params, &resp); err != nil {
 		return nil, err
 	}
 

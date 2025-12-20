@@ -34,8 +34,8 @@ func main() {
 	fmt.Println("=== 步行路径规划V1结果 ===")
 	for i, path := range resp.Route.Paths {
 		fmt.Printf("路径 %d:\n", i+1)
-		fmt.Printf("距离: %d 米\n", path.Distance)
-		fmt.Printf("耗时: %d 秒\n", path.Duration)
+		fmt.Printf("距离: %s 米\n", path.Distance)
+		fmt.Printf("耗时: %s 秒\n", path.Duration)
 		fmt.Printf("路段数量: %d\n", len(path.Steps))
 		fmt.Println()
 	}

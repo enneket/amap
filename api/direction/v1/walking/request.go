@@ -1,35 +1,28 @@
 package walking
 
-import (
-	amapType "github.com/enneket/amap/types"
-)
-
 // WalkingRequest 步行路径规划请求参数
+// 文档：https://lbs.amap.com/api/webservice/guide/api/direction#t4
 type WalkingRequest struct {
-	Origin          string                  `json:"origin"`                   // 起点坐标（必填，格式：经度,纬度）
-	Destination     string                  `json:"destination"`              // 终点坐标（必填，格式：经度,纬度）
-	CoordinateType  amapType.CoordinateType `json:"coordinate_type,omitempty"` // 输入/输出坐标系（可选，默认gcj02）
-	Output          amapType.OutputType     `json:"output,omitempty"`          // 输出格式（可选，默认JSON）
-	Language        amapType.LanguageType   `json:"language,omitempty"`        // 语言（可选，默认中文）
-	Timestamp       string                  `json:"timestamp,omitempty"`       // 时间戳（可选，核心客户端已自动填充，可覆盖）
+	Origin        string `json:"origin"`                   // 起点坐标（必填，格式：经度,纬度）
+	Destination   string `json:"destination"`              // 终点坐标（必填，格式：经度,纬度）
+	OriginID      string `json:"origin_id,omitempty"`      // 起点 POI ID（可选）
+	DestinationID string `json:"destination_id,omitempty"` // 目的地 POI ID（可选）
+	Callback      string `json:"callback,omitempty"`       // 回调函数名（可选，JSONP格式）
 }
 
 // ToParams 将请求参数转换为map[string]string格式
 func (req *WalkingRequest) ToParams() map[string]string {
 	params := make(map[string]string)
-	params["origin"] = req.Origin     // 起点坐标为必填项
+	params["origin"] = req.Origin           // 起点坐标为必填项
 	params["destination"] = req.Destination // 终点坐标为必填项
-	if req.CoordinateType != "" {
-		params["coordinate_type"] = string(req.CoordinateType)
+	if req.OriginID != "" {
+		params["origin_id"] = string(req.OriginID)
 	}
-	if req.Output != "" {
-		params["output"] = string(req.Output)
+	if req.DestinationID != "" {
+		params["destination_id"] = string(req.DestinationID)
 	}
-	if req.Language != "" {
-		params["language"] = string(req.Language)
-	}
-	if req.Timestamp != "" {
-		params["timestamp"] = req.Timestamp
+	if req.Callback != "" {
+		params["callback"] = string(req.Callback)
 	}
 	return params
 }
