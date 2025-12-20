@@ -22,8 +22,8 @@ func main() {
 
 	// 逆地理编码示例
 	req := &re_geo_code.ReGeocodeRequest{
-		Location:  "116.481028,39.989643",
-		Radius:    1000,
+		Location:   "116.481028,39.989643",
+		Radius:     1000,
 		Extensions: "all",
 	}
 
@@ -39,8 +39,6 @@ func main() {
 	fmt.Printf("市: %s\n", regeo.AddressComponent.City)
 	fmt.Printf("区: %s\n", regeo.AddressComponent.District)
 	fmt.Printf("城镇: %s\n", regeo.AddressComponent.Township)
-	fmt.Printf("街道: %s\n", regeo.AddressComponent.Street)
-	fmt.Printf("门牌号: %s\n", regeo.AddressComponent.Number)
 	fmt.Printf("城市代码: %s\n", regeo.AddressComponent.Citycode)
 	fmt.Printf("行政区划代码: %s\n", regeo.AddressComponent.Adcode)
 }

@@ -174,7 +174,7 @@ func (c *Client) ReGeocode(req *reGeoCode.ReGeocodeRequest) (*reGeoCode.ReGeocod
 
 	// 调用核心请求方法
 	var resp reGeoCode.ReGeocodeResponse
-	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/geocode/regeo", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, reGeoCode.API_PATH, params, &resp); err != nil {
 		return nil, err
 	}
 
