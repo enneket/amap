@@ -8,6 +8,10 @@ import (
 	"testing"
 	"time"
 
+	busLineID "github.com/enneket/amap/api/bus/line_id"
+	busLineKeyword "github.com/enneket/amap/api/bus/line_keyword"
+	busStationID "github.com/enneket/amap/api/bus/station_id"
+	busStationKeyword "github.com/enneket/amap/api/bus/station_keyword"
 	convert "github.com/enneket/amap/api/convert"
 	bicycling "github.com/enneket/amap/api/direction/v1/bicycling"
 	driving "github.com/enneket/amap/api/direction/v1/driving"
@@ -4429,4 +4433,197 @@ func TestHardwarePositionV5_Success(t *testing.T) {
 	assert.False(t, resp.Indoor)
 	assert.Equal(t, "长安街", resp.MapMatch.RoadName)
 	assert.Equal(t, "test_trace_id_123456", resp.TraceID)
+}
+
+// TestBusStationID 测试公交站ID查询接口
+func TestBusStationID(t *testing.T) {
+	// 创建模拟服务器
+	server := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"stationid": "123456",
+		"name": "测试站点",
+		"location": "116.397428,39.90923",
+		"lines": [{
+			"lineid": "line123",
+			"name": "测试线路1",
+			"start_time": "06:00",
+			"end_time": "22:00",
+			"distance": "10000",
+			"stations": [{
+				"id": "s1",
+				"name": "站点1",
+				"location": "116.397428,39.90923"
+			}, {
+				"id": "s2",
+				"name": "站点2",
+				"location": "116.398428,39.91023"
+			}]
+		}]}
+`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key:     "test_key",
+		BaseURL: server.URL + "/",
+	})
+
+	// 发送请求
+	resp, err := client.BusStationID(&busStationID.StationIDRequest{
+		ID:   "123456",
+		City: "北京",
+	})
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "123456", resp.StationID)
+	assert.Equal(t, "测试站点", resp.Name)
+	assert.Len(t, resp.Lines, 1)
+}
+
+// TestBusStationKeyword 测试公交站关键字查询接口
+func TestBusStationKeyword(t *testing.T) {
+	// 创建模拟服务器
+	server := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"suggestion": {
+			"keywords": ["测试站点"],
+			"cities": ["北京"]
+		},
+		"stations": [{
+			"id": "123456",
+			"name": "测试站点",
+			"location": "116.397428,39.90923",
+			"cityid": "110000",
+			"cityname": "北京",
+			"address": "测试地址"
+		}]}
+`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key:     "test_key",
+		BaseURL: server.URL + "/",
+	})
+
+	// 发送请求
+	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
+		Keywords: "测试站点",
+		City:     "北京",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Stations, 1)
+}
+
+// TestBusLineID 测试公交路线ID查询接口
+func TestBusLineID(t *testing.T) {
+	// 创建模拟服务器
+	server := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"lineid": "line123",
+		"name": "测试线路1",
+		"type": "公交车",
+		"start_time": "06:00",
+		"end_time": "22:00",
+		"distance": "10000",
+		"polyline": "116.397428,39.90923;116.398428,39.91023",
+		"stations": [{
+			"id": "s1",
+			"name": "站点1",
+			"location": "116.397428,39.90923"
+		}, {
+			"id": "s2",
+			"name": "站点2",
+			"location": "116.398428,39.91023"
+		}]}
+`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key:     "test_key",
+		BaseURL: server.URL + "/",
+	})
+
+	// 发送请求
+	resp, err := client.BusLineID(&busLineID.LineIDRequest{
+		ID:   "line123",
+		City: "北京",
+	})
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "line123", resp.LineID)
+	assert.Equal(t, "测试线路1", resp.Name)
+	assert.Len(t, resp.Stations, 2)
+}
+
+// TestBusLineKeyword 测试公交路线关键字查询接口
+func TestBusLineKeyword(t *testing.T) {
+	// 创建模拟服务器
+	server := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"suggestion": {
+			"keywords": ["测试线路"],
+			"cities": ["北京"]
+		},
+		"lines": [{
+			"lineid": "line123",
+			"name": "测试线路1",
+			"type": "公交车",
+			"start_time": "06:00",
+			"end_time": "22:00",
+			"distance": "10000",
+			"from_stop": "站点1",
+			"to_stop": "站点10"
+		}]}
+`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key:     "test_key",
+		BaseURL: server.URL + "/",
+	})
+
+	// 发送请求
+	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
+		Keywords: "测试线路",
+		City:     "北京",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Lines, 1)
 }

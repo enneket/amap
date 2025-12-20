@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	busLineID "github.com/enneket/amap/api/bus/line_id"
+	busLineKeyword "github.com/enneket/amap/api/bus/line_keyword"
+	busStationID "github.com/enneket/amap/api/bus/station_id"
+	busStationKeyword "github.com/enneket/amap/api/bus/station_keyword"
 	convert "github.com/enneket/amap/api/convert"
 	bicyclingV1 "github.com/enneket/amap/api/direction/v1/bicycling"
 	drivingV1 "github.com/enneket/amap/api/direction/v1/driving"
@@ -840,6 +844,98 @@ func (c *Client) RectangleTrafficStatus(req *rectangle.RectangleTrafficRequest) 
 	// 调用核心请求方法
 	var resp rectangle.RectangleTrafficResponse
 	if err := c.DoRequest("v3/traffic/status/rectangle", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BusStationID 公交站ID查询API调用方法
+// 根据公交站点ID查询经过该站点的所有公交线路详细信息
+func (c *Client) BusStationID(req *busStationID.StationIDRequest) (*busStationID.StationIDResponse, error) {
+	// 校验必填参数
+	if req.ID == "" {
+		return nil, amapErr.NewInvalidConfigError("公交站ID查询：id参数不能为空")
+	}
+	if req.City == "" {
+		return nil, amapErr.NewInvalidConfigError("公交站ID查询：city参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busStationID.StationIDResponse
+	if err := c.DoRequest("bus/linename", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BusStationKeyword 公交站关键字查询API调用方法
+// 根据公交站点名称关键字查询公交站点及经过该站点的公交线路信息
+func (c *Client) BusStationKeyword(req *busStationKeyword.StationKeywordRequest) (*busStationKeyword.StationKeywordResponse, error) {
+	// 校验必填参数
+	if req.Keywords == "" {
+		return nil, amapErr.NewInvalidConfigError("公交站关键字查询：keywords参数不能为空")
+	}
+	if req.City == "" {
+		return nil, amapErr.NewInvalidConfigError("公交站关键字查询：city参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busStationKeyword.StationKeywordResponse
+	if err := c.DoRequest("bus/station/search", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BusLineID 公交路线ID查询API调用方法
+// 根据公交线路ID查询该线路的详细信息
+func (c *Client) BusLineID(req *busLineID.LineIDRequest) (*busLineID.LineIDResponse, error) {
+	// 校验必填参数
+	if req.ID == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路线ID查询：id参数不能为空")
+	}
+	if req.City == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路线ID查询：city参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busLineID.LineIDResponse
+	if err := c.DoRequest("bus/lineid", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// BusLineKeyword 公交路线关键字查询API调用方法
+// 根据公交线路名称关键字查询公交线路详细信息
+func (c *Client) BusLineKeyword(req *busLineKeyword.LineKeywordRequest) (*busLineKeyword.LineKeywordResponse, error) {
+	// 校验必填参数
+	if req.Keywords == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路线关键字查询：keywords参数不能为空")
+	}
+	if req.City == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路线关键字查询：city参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busLineKeyword.LineKeywordResponse
+	if err := c.DoRequest("bus/line/search", params, &resp); err != nil {
 		return nil, err
 	}
 
