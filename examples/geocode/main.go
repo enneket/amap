@@ -39,7 +39,6 @@ func main() {
 		fmt.Printf("省: %s\n", geocode.Province)
 		fmt.Printf("市: %s\n", geocode.City)
 		fmt.Printf("区: %s\n", geocode.District)
-		fmt.Printf("城镇: %s\n", geocode.Township)
 		fmt.Printf("街道: %s\n", geocode.Street)
 		fmt.Printf("门牌号: %s\n", geocode.Number)
 		fmt.Printf("城市代码: %s\n", geocode.Citycode)
