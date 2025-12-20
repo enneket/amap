@@ -79,13 +79,12 @@ func TestDoRequest_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", map[string]string{"param1": "value1"}, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -104,13 +103,13 @@ func TestDoRequest_APIError(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", nil, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err)
@@ -135,7 +134,7 @@ func TestPlaceV3ID_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -168,7 +167,7 @@ func TestPlaceV3Text_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -201,7 +200,7 @@ func TestPlaceV3Around_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -234,7 +233,7 @@ func TestPlaceV3Polygon_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -267,7 +266,7 @@ func TestPlaceV3AOI_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -299,7 +298,7 @@ func TestPlaceV5ID_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -332,7 +331,7 @@ func TestPlaceV5Text_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -365,7 +364,7 @@ func TestPlaceV5Around_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -398,7 +397,7 @@ func TestPlaceV5Polygon_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -431,7 +430,7 @@ func TestPlaceV5AOI_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -453,13 +452,13 @@ func TestDoRequest_ParseError(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", nil, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err)
@@ -470,7 +469,7 @@ func TestDoRequest_ParseError(t *testing.T) {
 func TestDoRequest_NetworkError(t *testing.T) {
 	// 1. 创建Client实例，使用不存在的地址
 	config := NewConfig("test_key")
-	config.BaseURL = "http://non_existent_domain_12345.com/"
+
 	config.Timeout = 100 * time.Millisecond
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -506,14 +505,14 @@ func TestDoRequest_WithSignature(t *testing.T) {
 
 	// 2. 创建Client实例，配置SecurityKey
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	config.SecurityKey = "test_security_key"
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", map[string]string{"param1": "value1"}, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1"}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -549,7 +548,7 @@ func TestDoRequest_PublicParams(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -557,7 +556,7 @@ func TestDoRequest_PublicParams(t *testing.T) {
 	var resp TestResponse
 	customUserAgent := "test-agent/1.0"
 	config.UserAgent = customUserAgent
-	err = client.DoRequest("test/path", map[string]string{"param1": "value1", "param2": ""}, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", map[string]string{"param1": "value1", "param2": ""}, &resp)
 
 	// 4. 验证结果
 	assert.NoError(t, err)
@@ -584,7 +583,7 @@ func TestDoRequest_InvalidJSON(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -618,13 +617,13 @@ func TestBuildPublicParams(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
 	// 3. 执行请求
 	var resp TestResponse
-	err = client.DoRequest("test/path", nil, &resp)
+	err = client.DoRequest(mockServer.URL+"/test/path", nil, &resp)
 	require.NoError(t, err)
 
 	// 4. 验证时间戳格式正确
@@ -663,7 +662,7 @@ func TestGeoCode_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -731,7 +730,7 @@ func TestGeoCode_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -780,7 +779,7 @@ func TestReGeocode_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -871,7 +870,7 @@ func TestReGeocode_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -925,7 +924,7 @@ func TestReGeocode_DefaultValues(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -968,7 +967,7 @@ func TestDistance_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1077,7 +1076,7 @@ func TestDistance_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1130,7 +1129,7 @@ func TestDistance_MultiOriginsDestinations(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1193,7 +1192,7 @@ func TestWalking_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1323,7 +1322,7 @@ func TestLineTrafficStatus_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1390,7 +1389,7 @@ func TestCircleTrafficStatus_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1467,7 +1466,7 @@ func TestRectangleTrafficStatus_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1509,7 +1508,7 @@ func TestWalking_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1570,7 +1569,7 @@ func TestDriving_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1680,7 +1679,7 @@ func TestDriving_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1739,7 +1738,7 @@ func TestBicycling_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1848,7 +1847,7 @@ func TestBicycling_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -1912,7 +1911,7 @@ func TestWalkingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2023,7 +2022,7 @@ func TestWalkingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2084,7 +2083,7 @@ func TestDrivingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2195,7 +2194,7 @@ func TestDrivingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2258,7 +2257,7 @@ func TestETDDrivingV4_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2394,7 +2393,7 @@ func TestBicyclingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2503,7 +2502,7 @@ func TestBicyclingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2565,7 +2564,7 @@ func TestBusV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2672,7 +2671,7 @@ func TestBusV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2744,7 +2743,7 @@ func TestElectricV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2857,7 +2856,7 @@ func TestElectricV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2921,7 +2920,7 @@ func TestDistrict_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -2985,7 +2984,7 @@ func TestDistrict_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3028,7 +3027,7 @@ func TestDistrict_WithAdcode(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3077,7 +3076,7 @@ func TestDistrict_WithFilter(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3155,7 +3154,7 @@ func TestTrafficIncident_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3300,7 +3299,7 @@ func TestTrafficIncident_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3369,7 +3368,7 @@ func TestTrafficIncident_WithExtensionsAll(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3416,7 +3415,7 @@ func TestIPConfig_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3478,7 +3477,7 @@ func TestIPConfig_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3519,7 +3518,7 @@ func TestIPConfig_IPv6(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3580,7 +3579,7 @@ func TestIPConfig_WithLocationInfo(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3631,7 +3630,7 @@ func TestIPV5Config_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3693,7 +3692,7 @@ func TestIPV5Config_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3734,7 +3733,7 @@ func TestIPV5Config_IPv6(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3795,7 +3794,7 @@ func TestIPV5Config_WithLocationInfo(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3850,7 +3849,7 @@ func TestConvert_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3919,7 +3918,7 @@ func TestConvert_APIError(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -3970,7 +3969,7 @@ func TestGraspRoad_Success(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4047,7 +4046,7 @@ func TestGraspRoad_APIError(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4124,7 +4123,7 @@ func TestGraspRoad_WithExtensionsAll(t *testing.T) {
 
 	// 2. 创建Client实例
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4208,7 +4207,7 @@ func TestInputtips_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4274,7 +4273,7 @@ func TestInputtips_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4366,7 +4365,7 @@ func TestWeatherinfo_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4429,7 +4428,7 @@ func TestWeatherinfo_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4475,7 +4474,7 @@ func TestHardwarePosition_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4533,7 +4532,7 @@ func TestHardwarePositionV5_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
-	config.BaseURL = mockServer.URL + "/"
+
 	client, err := NewClient(config)
 	require.NoError(t, err)
 
@@ -4607,8 +4606,7 @@ func TestBusStationID(t *testing.T) {
 
 	// 创建客户端
 	client, _ := NewClient(&Config{
-		Key:     "test_key",
-		BaseURL: server.URL + "/",
+		Key: "test_key",
 	})
 
 	// 发送请求
@@ -4652,8 +4650,7 @@ func TestBusStationKeyword(t *testing.T) {
 
 	// 创建客户端
 	client, _ := NewClient(&Config{
-		Key:     "test_key",
-		BaseURL: server.URL + "/",
+		Key: "test_key",
 	})
 
 	// 发送请求
@@ -4701,8 +4698,7 @@ func TestBusLineID(t *testing.T) {
 
 	// 创建客户端
 	client, _ := NewClient(&Config{
-		Key:     "test_key",
-		BaseURL: server.URL + "/",
+		Key: "test_key",
 	})
 
 	// 发送请求
@@ -4748,8 +4744,7 @@ func TestBusLineKeyword(t *testing.T) {
 
 	// 创建客户端
 	client, _ := NewClient(&Config{
-		Key:     "test_key",
-		BaseURL: server.URL + "/",
+		Key: "test_key",
 	})
 
 	// 发送请求

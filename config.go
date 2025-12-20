@@ -8,7 +8,6 @@ type Config struct {
 	SecurityKey string        // 安全密钥（可选，用于签名）
 	Timeout     time.Duration // 请求超时（默认 5s）
 	Proxy       string        // HTTP 代理地址（可选）
-	BaseURL     string        // API 基础地址（默认 https://restapi.amap.com/v3/）
 	UserAgent   string        // 请求 UA（默认 amap-go/1.0）
 }
 
@@ -17,7 +16,6 @@ func NewConfig(key string) *Config {
 	return &Config{
 		Key:       key,
 		Timeout:   5 * time.Second,
-		BaseURL:   "https://restapi.amap.com/v3/",
 		UserAgent: "amap-go/1.0",
 	}
 }
