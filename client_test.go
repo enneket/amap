@@ -22,8 +22,7 @@ import (
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
-	"github.com/enneket/amap/api/ipconfig/v3"
-	ipconfigV3 "github.com/enneket/amap/api/ipconfig/v3"
+	ipV3 "github.com/enneket/amap/api/ip/v3"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
 	placev3id "github.com/enneket/amap/api/place/v3/id"
@@ -3065,7 +3064,7 @@ func TestIPConfig_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. 创建请求参数
-	req := &ipconfigV3.IPConfigRequest{
+	req := &ipV3.IPConfigRequest{
 		IP: "114.114.114.114",
 	}
 
@@ -3096,7 +3095,7 @@ func TestIPConfig_MissingIP(t *testing.T) {
 	require.NoError(t, err)
 
 	// 2. 创建缺少IP的请求参数
-	req := &ipconfig.IPConfigRequest{
+	req := &ipV3.IPConfigRequest{
 		// IP参数为空
 	}
 
@@ -3127,7 +3126,7 @@ func TestIPConfig_APIError(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. 创建请求参数
-	req := &ipconfig.IPConfigRequest{
+	req := &ipV3.IPConfigRequest{
 		IP: "114.114.114.114",
 	}
 
@@ -3168,7 +3167,7 @@ func TestIPConfig_IPv6(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. 创建请求参数，使用IPv6地址
-	req := &ipconfig.IPConfigRequest{
+	req := &ipV3.IPConfigRequest{
 		IP: "2001:4860:4860::8888",
 	}
 
@@ -3229,7 +3228,7 @@ func TestIPConfig_WithLocationInfo(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. 创建请求参数
-	req := &ipconfig.IPConfigRequest{
+	req := &ipV3.IPConfigRequest{
 		IP: "8.8.8.8",
 	}
 

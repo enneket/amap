@@ -1,4 +1,4 @@
-package ipconfig
+package ip
 
 import (
 	amapType "github.com/enneket/amap/types"
