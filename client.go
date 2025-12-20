@@ -34,6 +34,8 @@ import (
 	placev5id "github.com/enneket/amap/api/place/v5/id"
 	placev5polygon "github.com/enneket/amap/api/place/v5/polygon"
 	placev5text "github.com/enneket/amap/api/place/v5/text"
+	positionV1 "github.com/enneket/amap/api/position/v1"
+	positionV5 "github.com/enneket/amap/api/position/v5"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	"github.com/enneket/amap/api/weatherinfo"
@@ -742,6 +744,36 @@ func (c *Client) Weatherinfo(req *weatherinfo.WeatherinfoRequest) (*weatherinfo.
 	// 调用核心请求方法
 	var resp weatherinfo.WeatherinfoResponse
 	if err := c.DoRequest("weather/weatherInfo", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// HardwarePosition 硬件定位API调用方法（v1）
+// 支持通过硬件设备信息（如GPS、基站、WiFi等）获取地理位置信息
+func (c *Client) HardwarePosition(req *positionV1.HardwarePositionRequest) (*positionV1.HardwarePositionResponse, error) {
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp positionV1.HardwarePositionResponse
+	if err := c.DoRequest("position/v1/hardware", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// HardwarePositionV5 硬件定位API调用方法（v5）
+// 支持通过硬件设备信息（如GPS、基站、WiFi等）获取地理位置信息，v5版本增强了定位精度和多源数据融合能力
+func (c *Client) HardwarePositionV5(req *positionV5.HardwarePositionRequest) (*positionV5.HardwarePositionResponse, error) {
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp positionV5.HardwarePositionResponse
+	if err := c.DoRequest("v5/position/hardware", params, &resp); err != nil {
 		return nil, err
 	}
 

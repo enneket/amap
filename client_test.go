@@ -34,6 +34,8 @@ import (
 	placev5id "github.com/enneket/amap/api/place/v5/id"
 	placev5polygon "github.com/enneket/amap/api/place/v5/polygon"
 	placev5text "github.com/enneket/amap/api/place/v5/text"
+	positionV1 "github.com/enneket/amap/api/position/v1"
+	positionV5 "github.com/enneket/amap/api/position/v5"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
 	"github.com/enneket/amap/api/weatherinfo"
@@ -4092,4 +4094,130 @@ func TestWeatherinfo_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestHardwarePosition_Success 测试硬件定位API调用成功（v1）
+func TestHardwarePosition_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回硬件定位API v1响应
+	mockServer := mockResponse(http.StatusOK, `{
+                "status": "1",
+                "info": "OK",
+                "infocode": "10000",
+                "deviceid": "test_device",
+                "latitude": 39.908722,
+                "longitude": 116.397496,
+                "accuracy": 5.0,
+                "speed": 0.0,
+                "direction": 0.0,
+                "altitude": 43.5,
+                "floor": 1,
+                "timestamp": "2023-10-10T12:00:00Z",
+                "location_type": "hybrid",
+                "address": "北京市东城区东华门街道天安门广场",
+                "poi": [{"name": "天安门", "distance": 100, "latitude": 39.9087, "longitude": 116.3975, "type": "风景名胜"}],
+                "ad_info": {"province": "北京市", "city": "北京市", "district": "东城区", "adcode": "110101", "citycode": "010", "provincecode": "110000"}
+        }`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行硬件定位API v1请求
+	req := &positionV1.HardwarePositionRequest{
+		DeviceID:    "test_device",
+		GPS:         "39.908722,116.397496,0,0,1696900800,5",
+		WiFi:        "00:11:22:33:44:55,-70,test_ssid|66:77:88:99:AA:BB,-60,test_ssid2",
+		BaseStation: "460,0,12345,67890,-85",
+		Output:      "JSON",
+	}
+	resp, err := client.HardwarePosition(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "test_device", resp.DeviceID)
+	assert.Equal(t, 39.908722, resp.Latitude)
+	assert.Equal(t, 116.397496, resp.Longitude)
+	assert.Equal(t, 5.0, resp.Accuracy)
+	assert.Equal(t, "hybrid", resp.LocationType)
+	assert.Len(t, resp.POI, 1)
+	assert.Equal(t, "天安门", resp.POI[0].Name)
+}
+
+// TestHardwarePositionV5_Success 测试硬件定位API调用成功（v5）
+func TestHardwarePositionV5_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回硬件定位API v5响应
+	mockServer := mockResponse(http.StatusOK, `{
+                "status": "1",
+                "info": "OK",
+                "infocode": "10000",
+                "deviceid": "test_device",
+                "latitude": 39.908722,
+                "longitude": 116.397496,
+                "accuracy": 3.0,
+                "speed": 0.0,
+                "direction": 0.0,
+                "altitude": 43.5,
+                "floor": 1,
+                "timestamp": "2023-10-10T12:00:00Z",
+                "location_type": "hybrid",
+                "address": "北京市东城区东华门街道天安门广场",
+                "poi": [{"name": "天安门", "distance": 100, "latitude": 39.9087, "longitude": 116.3975, "type": "风景名胜", "address": "北京市东城区", "phone": "010-12345678"}],
+                "ad_info": {"province": "北京市", "city": "北京市", "district": "东城区", "adcode": "110101", "citycode": "010", "provincecode": "110000", "township": "东华门街道", "village": "天安门社区"},
+                "sensor_info": {"gps_valid": true, "wifi_valid": true, "basestation_valid": true, "bluetooth_valid": false, "used_sensor_types": ["gps", "wifi", "basestation"]},
+                "confidence": 98.5,
+                "indoor": false,
+                "map_match": {"road_name": "长安街", "road_type": "主干道", "offset": 5.0, "direction": 90.0},
+                "trace_id": "test_trace_id_123456"
+        }`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行硬件定位API v5请求
+	req := &positionV5.HardwarePositionRequest{
+		DeviceID:      "test_device",
+		GPS:           "39.908722,116.397496,0,0,1696900800,3",
+		WiFi:          "00:11:22:33:44:55,-70,test_ssid,1|66:77:88:99:AA:BB,-60,test_ssid2,2",
+		BaseStation:   "460,0,12345,67890,-85,2G",
+		Barometer:     "1013.25",
+		Accelerometer: "0,0,9.8",
+		Gyroscope:     "0,0,0",
+		Magnetometer:  "0,0,0",
+		Orientation:   "0,0,0",
+		PositionMode:  "1",
+		Output:        "JSON",
+	}
+	resp, err := client.HardwarePositionV5(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "test_device", resp.DeviceID)
+	assert.Equal(t, 39.908722, resp.Latitude)
+	assert.Equal(t, 116.397496, resp.Longitude)
+	assert.Equal(t, 3.0, resp.Accuracy)
+	assert.Equal(t, "hybrid", resp.LocationType)
+	assert.Len(t, resp.POI, 1)
+	assert.Equal(t, "天安门", resp.POI[0].Name)
+	assert.Equal(t, "北京市东城区", resp.POI[0].Address)
+	assert.Equal(t, "010-12345678", resp.POI[0].Phone)
+	assert.True(t, resp.SensorInfo.GPSValid)
+	assert.True(t, resp.SensorInfo.WiFiValid)
+	assert.True(t, resp.SensorInfo.BaseStationValid)
+	assert.Equal(t, 98.5, resp.Confidence)
+	assert.False(t, resp.Indoor)
+	assert.Equal(t, "长安街", resp.MapMatch.RoadName)
+	assert.Equal(t, "test_trace_id_123456", resp.TraceID)
 }
