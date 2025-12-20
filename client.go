@@ -21,6 +21,7 @@ import (
 	district "github.com/enneket/amap/api/district"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
+	"github.com/enneket/amap/api/inputtips"
 	ipconfig "github.com/enneket/amap/api/ipconfig"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
@@ -679,6 +680,26 @@ func (c *Client) PlaceV5AOI(req *placev5aoi.AOISearchRequest) (*placev5aoi.AOISe
 	// 调用核心请求方法
 	var resp placev5aoi.AOISearchResponse
 	if err := c.DoRequest("v5/place/aoi", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Inputtips 输入提示API调用方法
+// 支持根据关键字获取输入提示，可指定城市、类型等过滤条件
+func (c *Client) Inputtips(req *inputtips.InputtipsRequest) (*inputtips.InputtipsResponse, error) {
+	// 校验必填参数
+	if req.Keywords == "" {
+		return nil, amapErr.NewInvalidConfigError("输入提示：keywords参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp inputtips.InputtipsResponse
+	if err := c.DoRequest("assistant/inputtips", params, &resp); err != nil {
 		return nil, err
 	}
 

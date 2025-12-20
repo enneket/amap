@@ -21,6 +21,7 @@ import (
 	district "github.com/enneket/amap/api/district"
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
+	"github.com/enneket/amap/api/inputtips"
 	ipconfig "github.com/enneket/amap/api/ipconfig"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
@@ -3570,4 +3571,143 @@ func TestGraspRoad_WithExtensionsAll(t *testing.T) {
 	assert.Equal(t, 60, resp.Paths[0].Steps[0].Road.MaxSpeed)
 }
 
-// -------------------------- 高级搜索测试 --------------------------
+// -------------------------- 输入提示测试 --------------------------
+
+// TestInputtips_Success 测试Inputtips方法正常请求成功
+func TestInputtips_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回输入提示成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "2",
+		"tips": [
+			{
+				"id": "B000A83M61",
+				"name": "北京市朝阳区望京SOHO",
+				"district": "朝阳区",
+				"adcode": "110105",
+				"location": "116.48693,39.99936",
+				"address": "望京街8号",
+				"type": "商务住宅;楼宇;商务写字楼",
+				"typecode": "120201",
+				"weight": "90",
+				"city": "北京市",
+				"citycode": "010",
+				"districtadcode": "110105",
+				"province": "北京市",
+				"business_area": "望京"
+			},
+			{
+				"id": "B000A83M62",
+				"name": "北京市朝阳区望京公园",
+				"district": "朝阳区",
+				"adcode": "110105",
+				"location": "116.47693,39.98936",
+				"address": "望京西路",
+				"type": "风景名胜;公园广场;公园",
+				"typecode": "060301",
+				"weight": "85",
+				"city": "北京市",
+				"citycode": "010",
+				"districtadcode": "110105",
+				"province": "北京市",
+				"business_area": "望京"
+			}
+		],
+		"suggestion": {
+			"keywords": ["望京SOHO", "望京公园", "望京医院"],
+			"cities": ["北京市", "上海市"]
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建输入提示请求
+	req := &inputtips.InputtipsRequest{
+		Keywords: "望京",
+		City:     "北京",
+		Datatype: "all",
+	}
+
+	// 4. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "2", resp.Count)
+	assert.Len(t, resp.Tips, 2)
+	assert.Equal(t, "B000A83M61", resp.Tips[0].ID)
+	assert.Equal(t, "北京市朝阳区望京SOHO", resp.Tips[0].Name)
+	assert.Equal(t, "朝阳区", resp.Tips[0].District)
+	assert.Equal(t, "110105", resp.Tips[0].Adcode)
+	assert.Equal(t, "116.48693,39.99936", resp.Tips[0].Location)
+	assert.Equal(t, "商务住宅;楼宇;商务写字楼", resp.Tips[0].Type)
+	assert.Equal(t, "望京", resp.Tips[0].BusinessArea)
+	assert.Len(t, resp.Suggestion.Keywords, 3)
+	assert.Contains(t, resp.Suggestion.Keywords, "望京SOHO")
+	assert.Len(t, resp.Suggestion.Cities, 2)
+	assert.Contains(t, resp.Suggestion.Cities, "北京市")
+}
+
+// TestInputtips_MissingKeywords 测试Inputtips方法缺少必填参数keywords
+func TestInputtips_MissingKeywords(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少关键字的请求
+	req := &inputtips.InputtipsRequest{
+		City: "北京", // 缺少keywords
+	}
+
+	// 3. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestInputtips_APIError 测试Inputtips方法API返回错误
+func TestInputtips_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建输入提示请求
+	req := &inputtips.InputtipsRequest{
+		Keywords: "望京",
+		City:     "北京",
+	}
+
+	// 4. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
