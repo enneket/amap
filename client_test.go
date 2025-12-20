@@ -35,6 +35,7 @@ import (
 	placev5text "github.com/enneket/amap/api/place/v5/text"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
+	"github.com/enneket/amap/api/weatherinfo"
 	amapErr "github.com/enneket/amap/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -3702,6 +3703,160 @@ func TestInputtips_APIError(t *testing.T) {
 
 	// 4. 执行输入提示请求
 	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 天气信息测试 --------------------------
+
+// TestWeatherinfo_Success 测试Weatherinfo方法正常请求成功
+func TestWeatherinfo_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回天气信息成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"weatherinfo": {
+			"city": "北京市",
+			"cityid": "101010100",
+			"temp": "22",
+			"WD": "东南风",
+			"WS": "1级",
+			"SD": "40%",
+			"AP": "1013hPa",
+			"NJD": "10km",
+			"WSE": "1",
+			"time": "10:30",
+			"isRadar": "1",
+			"Radar": "JC_RADAR_AZ9010_JB",
+			"weather": "晴",
+			"temperature": "10~22℃",
+			"winddirection": "东南",
+			"windpower": "1-2级",
+			"humidity": "40%"
+		},
+		"forecasts": [
+			{
+				"city": "北京市",
+				"adcode": "110000",
+				"province": "北京",
+				"reporttime": "2023-05-20 10:30:00",
+				"castype": "1",
+				"forecast": [
+					{
+						"date": "2023-05-20",
+						"week": "六",
+						"dayweather": "晴",
+						"nightweather": "晴",
+						"daytemp": "22",
+						"nighttemp": "10",
+						"daywind": "东南风",
+						"nightwind": "东南风",
+						"daypower": "1级",
+						"nightpower": "1级",
+						"daytemp_float": 22.0,
+						"nighttemp_float": 10.0
+					}
+				]
+			}
+		],
+		"suggestion": {
+			"comf": {
+				"brf": "舒适",
+				"txt": "白天温度适宜，风力不大，相信您在这样的天气条件下，应会感到比较清爽和舒适。",
+				"type": "comf"
+			},
+			"cw": {
+				"brf": "较适宜",
+				"txt": "较适宜洗车，未来一天无雨，风力较小，擦洗一新的汽车至少能保持一天。",
+				"type": "cw"
+			}
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建天气信息请求
+	req := &weatherinfo.WeatherinfoRequest{
+		City:       "北京市",
+		Extensions: "all",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "北京市", resp.Weatherinfo.City)
+	assert.Equal(t, "101010100", resp.Weatherinfo.CityID)
+	assert.Equal(t, "22", resp.Weatherinfo.Temp)
+	assert.Equal(t, "晴", resp.Weatherinfo.Weather)
+	assert.Equal(t, "10~22℃", resp.Weatherinfo.Temperature)
+	assert.Len(t, resp.Forecasts, 1)
+	assert.Len(t, resp.Forecasts[0].Forecast, 1)
+	assert.Equal(t, "2023-05-20", resp.Forecasts[0].Forecast[0].Date)
+	assert.Equal(t, "晴", resp.Forecasts[0].Forecast[0].Dayweather)
+	assert.Equal(t, "舒适", resp.Suggestion.Comf.Brf)
+	assert.Equal(t, "较适宜", resp.Suggestion.Cw.Brf)
+}
+
+// TestWeatherinfo_MissingCity 测试Weatherinfo方法缺少必填参数city
+func TestWeatherinfo_MissingCity(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少城市的请求
+	req := &weatherinfo.WeatherinfoRequest{
+		Extensions: "base", // 缺少city
+	}
+
+	// 3. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestWeatherinfo_APIError 测试Weatherinfo方法API返回错误
+func TestWeatherinfo_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建天气信息请求
+	req := &weatherinfo.WeatherinfoRequest{
+		City: "北京市",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
 
 	// 5. 验证结果
 	assert.Error(t, err)

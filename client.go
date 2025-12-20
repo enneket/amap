@@ -35,6 +35,7 @@ import (
 	placev5text "github.com/enneket/amap/api/place/v5/text"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
+	"github.com/enneket/amap/api/weatherinfo"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
 	"github.com/enneket/amap/utils"
@@ -700,6 +701,26 @@ func (c *Client) Inputtips(req *inputtips.InputtipsRequest) (*inputtips.Inputtip
 	// 调用核心请求方法
 	var resp inputtips.InputtipsResponse
 	if err := c.DoRequest("assistant/inputtips", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Weatherinfo 天气信息API调用方法
+// 支持获取实时天气、预报信息和生活指数建议
+func (c *Client) Weatherinfo(req *weatherinfo.WeatherinfoRequest) (*weatherinfo.WeatherinfoResponse, error) {
+	// 校验必填参数
+	if req.City == "" {
+		return nil, amapErr.NewInvalidConfigError("天气信息：city参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp weatherinfo.WeatherinfoResponse
+	if err := c.DoRequest("weather/weatherInfo", params, &resp); err != nil {
 		return nil, err
 	}
 
