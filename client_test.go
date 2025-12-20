@@ -23,6 +23,7 @@ import (
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
 	ipV3 "github.com/enneket/amap/api/ip/v3"
+	ipV5 "github.com/enneket/amap/api/ip/v5"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
 	placev3id "github.com/enneket/amap/api/place/v3/id"
@@ -3245,6 +3246,232 @@ func TestIPConfig_WithLocationInfo(t *testing.T) {
 	assert.Equal(t, "39.032222", resp.Location.Lat)
 	assert.Equal(t, "-77.438217", resp.Location.Lon)
 	assert.Equal(t, "美国弗吉尼亚州阿什本劳登县", resp.Location.Address)
+	assert.NotNil(t, resp.Location.ISPInfo)
+	assert.Equal(t, "Google LLC", resp.Location.ISPInfo.Name)
+	assert.Equal(t, "ISP", resp.Location.ISPInfo.Type)
+	assert.Equal(t, "310", resp.Location.ISPInfo.MCC)
+	assert.Equal(t, "260", resp.Location.ISPInfo.MNC)
+}
+
+// -------------------------- IP v5 测试 --------------------------
+
+// TestIPV5Config_Success 测试IPV5Config方法正常请求成功
+func TestIPV5Config_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回正常IP定位响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"ip": "114.114.114.114",
+		"country": "中国",
+		"province": "江苏省",
+		"city": "南京市",
+		"district": "秦淮区",
+		"adcode": "320104",
+		"center": "118.796877,32.048458",
+		"isp": "江苏省电信"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &ipV5.IPConfigRequest{
+		IP: "114.114.114.114",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "114.114.114.114", resp.IP)
+	assert.Equal(t, "中国", resp.Country)
+	assert.Equal(t, "江苏省", resp.Province)
+	assert.Equal(t, "南京市", resp.City)
+	assert.Equal(t, "秦淮区", resp.District)
+	assert.Equal(t, "320104", resp.Adcode)
+	assert.Equal(t, "118.796877,32.048458", resp.Center)
+	assert.Equal(t, "江苏省电信", resp.ISP)
+}
+
+// TestIPV5Config_MissingIP 测试IPV5Config方法缺少必填参数IP
+func TestIPV5Config_MissingIP(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少IP的请求参数
+	req := &ipV5.IPConfigRequest{
+		// IP参数为空
+	}
+
+	// 3. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "ip参数不能为空")
+}
+
+// TestIPV5Config_APIError 测试IPV5Config方法API返回错误
+func TestIPV5Config_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &ipV5.IPConfigRequest{
+		IP: "114.114.114.114",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestIPV5Config_IPv6 测试IPV5Config方法使用IPv6地址
+func TestIPV5Config_IPv6(t *testing.T) {
+	// 1. 创建mock服务器，返回IPv6地址定位响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"ip": "2001:4860:4860::8888",
+		"country": "美国",
+		"province": "加利福尼亚州",
+		"city": "山景城",
+		"district": "圣克拉拉县",
+		"adcode": "84006085",
+		"center": "-122.083851,37.422258",
+		"isp": "Google LLC"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用IPv6地址
+	req := &ipV5.IPConfigRequest{
+		IP: "2001:4860:4860::8888",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "2001:4860:4860::8888", resp.IP)
+	assert.Equal(t, "美国", resp.Country)
+	assert.Equal(t, "加利福尼亚州", resp.Province)
+	assert.Equal(t, "山景城", resp.City)
+	assert.Equal(t, "圣克拉拉县", resp.District)
+	assert.Equal(t, "84006085", resp.Adcode)
+	assert.Equal(t, "-122.083851,37.422258", resp.Center)
+	assert.Equal(t, "Google LLC", resp.ISP)
+}
+
+// TestIPV5Config_WithLocationInfo 测试IPV5Config方法返回详细位置信息
+func TestIPV5Config_WithLocationInfo(t *testing.T) {
+	// 1. 创建mock服务器，返回带详细位置信息的IP定位响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"ip": "8.8.8.8",
+		"country": "美国",
+		"province": "弗吉尼亚州",
+		"city": "阿什本",
+		"district": "劳登县",
+		"adcode": "84051107",
+		"center": "-77.438217,39.032222",
+		"isp": "Google LLC",
+		"location": {
+			"lat": "39.032222",
+			"lon": "-77.438217",
+			"address": "美国弗吉尼亚州阿什本劳登县",
+			"city_code": "ASB",
+			"province_code": "VA",
+			"district_code": "LDN",
+			"isp_info": {
+				"name": "Google LLC",
+				"type": "ISP",
+				"mcc": "310",
+				"mnc": "260"
+			}
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &ipV5.IPConfigRequest{
+		IP: "8.8.8.8",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "8.8.8.8", resp.IP)
+	assert.Equal(t, "美国", resp.Country)
+	assert.Equal(t, "弗吉尼亚州", resp.Province)
+	assert.Equal(t, "阿什本", resp.City)
+	assert.Equal(t, "劳登县", resp.District)
+	assert.Equal(t, "84051107", resp.Adcode)
+	assert.Equal(t, "-77.438217,39.032222", resp.Center)
+	assert.Equal(t, "Google LLC", resp.ISP)
+	assert.NotNil(t, resp.Location)
+	assert.Equal(t, "39.032222", resp.Location.Lat)
+	assert.Equal(t, "-77.438217", resp.Location.Lon)
+	assert.Equal(t, "美国弗吉尼亚州阿什本劳登县", resp.Location.Address)
+	assert.Equal(t, "ASB", resp.Location.CityCode)
+	assert.Equal(t, "VA", resp.Location.ProvinceCode)
+	assert.Equal(t, "LDN", resp.Location.DistrictCode)
 	assert.NotNil(t, resp.Location.ISPInfo)
 	assert.Equal(t, "Google LLC", resp.Location.ISPInfo.Name)
 	assert.Equal(t, "ISP", resp.Location.ISPInfo.Type)

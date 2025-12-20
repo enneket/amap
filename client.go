@@ -23,6 +23,7 @@ import (
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
 	ipV3 "github.com/enneket/amap/api/ip/v3"
+	ipV5 "github.com/enneket/amap/api/ip/v5"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
 	placev3id "github.com/enneket/amap/api/place/v3/id"
@@ -464,6 +465,26 @@ func (c *Client) IPConfig(req *ipV3.IPConfigRequest) (*ipV3.IPConfigResponse, er
 	// 调用核心请求方法
 	var resp ipV3.IPConfigResponse
 	if err := c.DoRequest("ip", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// IPV5Config IP定位API调用方法（v5）
+// 支持通过IP地址查询地理位置信息，返回省份、城市、区县、ISP等信息
+func (c *Client) IPV5Config(req *ipV5.IPConfigRequest) (*ipV5.IPConfigResponse, error) {
+	// 校验必填参数
+	if req.IP == "" {
+		return nil, amapErr.NewInvalidConfigError("IP定位v5：ip参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp ipV5.IPConfigResponse
+	if err := c.DoRequest("v5/ip", params, &resp); err != nil {
 		return nil, err
 	}
 
