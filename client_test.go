@@ -38,6 +38,9 @@ import (
 	positionV5 "github.com/enneket/amap/api/position/v5"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
+	circle "github.com/enneket/amap/api/traffic-situation/circle"
+	line "github.com/enneket/amap/api/traffic-situation/line"
+	rectangle "github.com/enneket/amap/api/traffic-situation/rectangle"
 	"github.com/enneket/amap/api/weatherinfo"
 	amapErr "github.com/enneket/amap/errors"
 	"github.com/stretchr/testify/assert"
@@ -1281,6 +1284,212 @@ func TestWalking_InvalidCoordinateFormat(t *testing.T) {
 	assert.Nil(t, resp)
 	assert.IsType(t, amapErr.InvalidConfigError(""), err)
 	assert.Contains(t, err.Error(), "坐标格式错误")
+}
+
+// TestLineTrafficStatus_Success 测试线路交通态势查询成功
+func TestLineTrafficStatus_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"trafficinfo": {
+			"description": "整体路况良好",
+			"evaluation": {
+				"expedite": 1,
+				"congested": 0,
+				"blocking": 0,
+				"unknown": 0,
+				"status": "expedite",
+				"description": "畅通"
+			},
+			"roads": [{
+				"name": "测试道路",
+				"status": 1,
+				"direction": "东向西",
+				"lcodes": ["123456"],
+				"polyline": "116.481028,39.989643;116.489028,39.999643",
+				"speed": 60,
+				"jams": []
+			}]
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &line.LineTrafficRequest{
+		Path: "116.481028,39.989643;116.489028,39.999643",
+	}
+	resp, err := client.LineTrafficStatus(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.Infocode)
+	assert.NotNil(t, resp.Trafficinfo)
+	assert.Equal(t, "整体路况良好", resp.Trafficinfo.Description)
+	assert.Equal(t, 1, resp.Trafficinfo.Evaluation.Expedite)
+	assert.Equal(t, 0, resp.Trafficinfo.Evaluation.Congested)
+	assert.Equal(t, "expedite", resp.Trafficinfo.Evaluation.Status)
+	assert.Len(t, resp.Trafficinfo.Roads, 1)
+	assert.Equal(t, "测试道路", resp.Trafficinfo.Roads[0].Name)
+	assert.Equal(t, 1, resp.Trafficinfo.Roads[0].Status)
+	assert.Equal(t, 60.0, resp.Trafficinfo.Roads[0].Speed)
+}
+
+// TestCircleTrafficStatus_Success 测试圆形区域交通态势查询成功
+func TestCircleTrafficStatus_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"trafficinfo": {
+			"description": "整体路况良好",
+			"evaluation": {
+				"expedite": 2,
+				"congested": 0,
+				"blocking": 0,
+				"unknown": 0,
+				"status": "expedite",
+				"description": "畅通"
+			},
+			"roads": [{
+				"name": "测试道路1",
+				"status": 1,
+				"direction": "东向西",
+				"lcodes": ["123456"],
+				"polyline": "116.481028,39.989643;116.489028,39.999643",
+				"speed": 60,
+				"jams": []
+			}, {
+				"name": "测试道路2",
+				"status": 1,
+				"direction": "西向东",
+				"lcodes": ["789012"],
+				"polyline": "116.489028,39.999643;116.481028,39.989643",
+				"speed": 55,
+				"jams": []
+			}]
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &circle.CircleTrafficRequest{
+		Center: "116.481028,39.989643",
+		Radius: "1000",
+	}
+	resp, err := client.CircleTrafficStatus(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.Infocode)
+	assert.NotNil(t, resp.Trafficinfo)
+	assert.Equal(t, "整体路况良好", resp.Trafficinfo.Description)
+	assert.Equal(t, 2, resp.Trafficinfo.Evaluation.Expedite)
+	assert.Equal(t, "expedite", resp.Trafficinfo.Evaluation.Status)
+	assert.Len(t, resp.Trafficinfo.Roads, 2)
+	assert.Equal(t, "测试道路1", resp.Trafficinfo.Roads[0].Name)
+	assert.Equal(t, 1, resp.Trafficinfo.Roads[0].Status)
+	assert.Equal(t, 60.0, resp.Trafficinfo.Roads[0].Speed)
+	assert.Equal(t, "测试道路2", resp.Trafficinfo.Roads[1].Name)
+	assert.Equal(t, 55.0, resp.Trafficinfo.Roads[1].Speed)
+}
+
+// TestRectangleTrafficStatus_Success 测试矩形区域交通态势查询成功
+func TestRectangleTrafficStatus_Success(t *testing.T) {
+	// 1. 创建mock服务器
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"trafficinfo": {
+			"description": "整体路况良好",
+			"evaluation": {
+				"expedite": 3,
+				"congested": 0,
+				"blocking": 0,
+				"unknown": 0,
+				"status": "expedite",
+				"description": "畅通"
+			},
+			"roads": [{
+				"name": "测试道路1",
+				"status": 1,
+				"direction": "东向西",
+				"lcodes": ["123456"],
+				"polyline": "116.481028,39.989643;116.489028,39.999643",
+				"speed": 60,
+				"jams": []
+			}, {
+				"name": "测试道路2",
+				"status": 1,
+				"direction": "西向东",
+				"lcodes": ["789012"],
+				"polyline": "116.489028,39.999643;116.481028,39.989643",
+				"speed": 55,
+				"jams": []
+			}, {
+				"name": "测试道路3",
+				"status": 1,
+				"direction": "南向北",
+				"lcodes": ["345678"],
+				"polyline": "116.485028,39.989643;116.485028,39.999643",
+				"speed": 50,
+				"jams": []
+			}]
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL + "/"
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求
+	req := &rectangle.RectangleTrafficRequest{
+		Rectangle: "116.481028,39.989643;116.489028,39.999643",
+	}
+	resp, err := client.RectangleTrafficStatus(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.Infocode)
+	assert.NotNil(t, resp.Trafficinfo)
+	assert.Equal(t, "整体路况良好", resp.Trafficinfo.Description)
+	assert.Equal(t, 3, resp.Trafficinfo.Evaluation.Expedite)
+	assert.Equal(t, "expedite", resp.Trafficinfo.Evaluation.Status)
+	assert.Len(t, resp.Trafficinfo.Roads, 3)
+	assert.Equal(t, "测试道路1", resp.Trafficinfo.Roads[0].Name)
+	assert.Equal(t, 1, resp.Trafficinfo.Roads[0].Status)
+	assert.Equal(t, 60.0, resp.Trafficinfo.Roads[0].Speed)
+	assert.Equal(t, "测试道路2", resp.Trafficinfo.Roads[1].Name)
+	assert.Equal(t, 55.0, resp.Trafficinfo.Roads[1].Speed)
+	assert.Equal(t, "测试道路3", resp.Trafficinfo.Roads[2].Name)
+	assert.Equal(t, 50.0, resp.Trafficinfo.Roads[2].Speed)
 }
 
 // TestWalking_APIError 测试Walking方法API返回错误

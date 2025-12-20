@@ -38,6 +38,9 @@ import (
 	positionV5 "github.com/enneket/amap/api/position/v5"
 	reGeoCode "github.com/enneket/amap/api/re_geo_code"
 	trafficIncident "github.com/enneket/amap/api/traffic-incident"
+	circle "github.com/enneket/amap/api/traffic-situation/circle"
+	line "github.com/enneket/amap/api/traffic-situation/line"
+	rectangle "github.com/enneket/amap/api/traffic-situation/rectangle"
 	"github.com/enneket/amap/api/weatherinfo"
 	amapErr "github.com/enneket/amap/errors"
 	amapType "github.com/enneket/amap/types"
@@ -774,6 +777,69 @@ func (c *Client) HardwarePositionV5(req *positionV5.HardwarePositionRequest) (*p
 	// 调用核心请求方法
 	var resp positionV5.HardwarePositionResponse
 	if err := c.DoRequest("v5/position/hardware", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// LineTrafficStatus 指定线路交通态势查询API调用方法
+// 支持查询指定线路的交通态势信息
+func (c *Client) LineTrafficStatus(req *line.LineTrafficRequest) (*line.LineTrafficResponse, error) {
+	// 校验必填参数
+	if req.Path == "" {
+		return nil, amapErr.NewInvalidConfigError("指定线路交通态势查询：path参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp line.LineTrafficResponse
+	if err := c.DoRequest("v3/traffic/status/road", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// CircleTrafficStatus 圆形区域内交通态势查询API调用方法
+// 支持查询指定圆形区域内的交通态势信息
+func (c *Client) CircleTrafficStatus(req *circle.CircleTrafficRequest) (*circle.CircleTrafficResponse, error) {
+	// 校验必填参数
+	if req.Center == "" {
+		return nil, amapErr.NewInvalidConfigError("圆形区域交通态势查询：center参数不能为空")
+	}
+	if req.Radius == "" {
+		return nil, amapErr.NewInvalidConfigError("圆形区域交通态势查询：radius参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp circle.CircleTrafficResponse
+	if err := c.DoRequest("v3/traffic/status/circle", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// RectangleTrafficStatus 矩形区域内交通态势查询API调用方法
+// 支持查询指定矩形区域内的交通态势信息
+func (c *Client) RectangleTrafficStatus(req *rectangle.RectangleTrafficRequest) (*rectangle.RectangleTrafficResponse, error) {
+	// 校验必填参数
+	if req.Rectangle == "" {
+		return nil, amapErr.NewInvalidConfigError("矩形区域交通态势查询：rectangle参数不能为空")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp rectangle.RectangleTrafficResponse
+	if err := c.DoRequest("v3/traffic/status/rectangle", params, &resp); err != nil {
 		return nil, err
 	}
 
