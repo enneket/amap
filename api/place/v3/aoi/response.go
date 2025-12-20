@@ -4,10 +4,10 @@ import (
 	amapType "github.com/enneket/amap/types"
 )
 
-// SearchResponse 高级搜索响应
+// AOISearchResponse AOI查询响应
 // 文档：https://lbs.amap.com/api/webservice/guide/api-advanced/search
 // 返回搜索结果，包括POI列表、分页信息等
-type SearchResponse struct {
+type AOISearchResponse struct {
 	amapType.BaseResponse               // 继承基础响应（Status/Info/InfoCode）
 	Count                 string        `json:"count"`                   // 匹配的POI数量
 	Pois                  []PoiItem     `json:"pois"`                    // POI列表

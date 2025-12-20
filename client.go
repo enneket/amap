@@ -517,7 +517,7 @@ func (c *Client) GraspRoad(req *grasproad.GraspRoadRequest) (*grasproad.GraspRoa
 
 // PlaceV3ID POI ID查询API调用方法（v3）
 // 根据POI ID查询详细信息
-func (c *Client) PlaceV3ID(req *placev3id.IDRequest) (*placev3id.SearchResponse, error) {
+func (c *Client) PlaceV3ID(req *placev3id.IDRequest) (*placev3id.IDResponse, error) {
 	// 校验必填参数
 	if req.ID == "" {
 		return nil, amapErr.NewInvalidConfigError("POI ID查询：id参数不能为空")
@@ -527,7 +527,7 @@ func (c *Client) PlaceV3ID(req *placev3id.IDRequest) (*placev3id.SearchResponse,
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev3id.SearchResponse
+	var resp placev3id.IDResponse
 	if err := c.DoRequest("place/detail", params, &resp); err != nil {
 		return nil, err
 	}
@@ -537,12 +537,12 @@ func (c *Client) PlaceV3ID(req *placev3id.IDRequest) (*placev3id.SearchResponse,
 
 // PlaceV3Text POI文本搜索API调用方法（v3）
 // 基于关键词的搜索，支持矩形范围搜索
-func (c *Client) PlaceV3Text(req *placev3text.TextSearchRequest) (*placev3text.SearchResponse, error) {
+func (c *Client) PlaceV3Text(req *placev3text.TextSearchRequest) (*placev3text.TextSearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev3text.SearchResponse
+	var resp placev3text.TextSearchResponse
 	if err := c.DoRequest("place/text", params, &resp); err != nil {
 		return nil, err
 	}
@@ -552,7 +552,7 @@ func (c *Client) PlaceV3Text(req *placev3text.TextSearchRequest) (*placev3text.S
 
 // PlaceV3Around POI周边搜索API调用方法（v3）
 // 基于中心点和半径的搜索，用于查询指定区域内的POI
-func (c *Client) PlaceV3Around(req *placev3around.AroundSearchRequest) (*placev3around.SearchResponse, error) {
+func (c *Client) PlaceV3Around(req *placev3around.AroundSearchRequest) (*placev3around.AroundSearchResponse, error) {
 	// 校验必填参数
 	if req.Location == "" {
 		return nil, amapErr.NewInvalidConfigError("POI周边搜索：location参数不能为空")
@@ -562,7 +562,7 @@ func (c *Client) PlaceV3Around(req *placev3around.AroundSearchRequest) (*placev3
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev3around.SearchResponse
+	var resp placev3around.AroundSearchResponse
 	if err := c.DoRequest("place/around", params, &resp); err != nil {
 		return nil, err
 	}
@@ -572,12 +572,12 @@ func (c *Client) PlaceV3Around(req *placev3around.AroundSearchRequest) (*placev3
 
 // PlaceV3Polygon POI多边形搜索API调用方法（v3）
 // 基于多边形边界的搜索，用于查询指定多边形区域内的POI
-func (c *Client) PlaceV3Polygon(req *placev3polygon.PolygonSearchRequest) (*placev3polygon.SearchResponse, error) {
+func (c *Client) PlaceV3Polygon(req *placev3polygon.PolygonSearchRequest) (*placev3polygon.PolygonSearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev3polygon.SearchResponse
+	var resp placev3polygon.PolygonSearchResponse
 	if err := c.DoRequest("place/polygon", params, &resp); err != nil {
 		return nil, err
 	}
@@ -587,12 +587,12 @@ func (c *Client) PlaceV3Polygon(req *placev3polygon.PolygonSearchRequest) (*plac
 
 // PlaceV3AOI POI AOI查询API调用方法（v3）
 // 用于查询指定AOI区域内的POI
-func (c *Client) PlaceV3AOI(req *placev3aoi.AOISearchRequest) (*placev3aoi.SearchResponse, error) {
+func (c *Client) PlaceV3AOI(req *placev3aoi.AOISearchRequest) (*placev3aoi.AOISearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev3aoi.SearchResponse
+	var resp placev3aoi.AOISearchResponse
 	if err := c.DoRequest("place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func (c *Client) PlaceV3AOI(req *placev3aoi.AOISearchRequest) (*placev3aoi.Searc
 
 // PlaceV5ID POI ID查询API调用方法（v5）
 // 根据POI ID查询详细信息
-func (c *Client) PlaceV5ID(req *placev5id.IDRequest) (*placev5id.SearchResponse, error) {
+func (c *Client) PlaceV5ID(req *placev5id.IDRequest) (*placev5id.IDResponse, error) {
 	// 校验必填参数
 	if req.ID == "" {
 		return nil, amapErr.NewInvalidConfigError("POI ID查询v5：id参数不能为空")
@@ -612,7 +612,7 @@ func (c *Client) PlaceV5ID(req *placev5id.IDRequest) (*placev5id.SearchResponse,
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev5id.SearchResponse
+	var resp placev5id.IDResponse
 	if err := c.DoRequest("v5/place/detail", params, &resp); err != nil {
 		return nil, err
 	}
@@ -622,7 +622,7 @@ func (c *Client) PlaceV5ID(req *placev5id.IDRequest) (*placev5id.SearchResponse,
 
 // PlaceV5Text POI文本搜索API调用方法（v5）
 // 基于关键词的搜索，用于查询指定区域内的POI
-func (c *Client) PlaceV5Text(req *placev5text.TextSearchRequest) (*placev5text.SearchResponse, error) {
+func (c *Client) PlaceV5Text(req *placev5text.TextSearchRequest) (*placev5text.TextSearchResponse, error) {
 	// 校验必填参数
 	if req.Keyword == "" {
 		return nil, amapErr.NewInvalidConfigError("POI文本搜索v5：keyword参数不能为空")
@@ -632,7 +632,7 @@ func (c *Client) PlaceV5Text(req *placev5text.TextSearchRequest) (*placev5text.S
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev5text.SearchResponse
+	var resp placev5text.TextSearchResponse
 	if err := c.DoRequest("v5/place/text", params, &resp); err != nil {
 		return nil, err
 	}
@@ -642,12 +642,12 @@ func (c *Client) PlaceV5Text(req *placev5text.TextSearchRequest) (*placev5text.S
 
 // PlaceV5Around POI周边搜索API调用方法（v5）
 // 基于中心点和半径的搜索，用于查询指定区域内的POI
-func (c *Client) PlaceV5Around(req *placev5around.AroundSearchRequest) (*placev5around.SearchResponse, error) {
+func (c *Client) PlaceV5Around(req *placev5around.AroundSearchRequest) (*placev5around.AroundSearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev5around.SearchResponse
+	var resp placev5around.AroundSearchResponse
 	if err := c.DoRequest("v5/place/around", params, &resp); err != nil {
 		return nil, err
 	}
@@ -657,12 +657,12 @@ func (c *Client) PlaceV5Around(req *placev5around.AroundSearchRequest) (*placev5
 
 // PlaceV5Polygon POI多边形搜索API调用方法（v5）
 // 基于多边形边界的搜索，用于查询指定多边形区域内的POI
-func (c *Client) PlaceV5Polygon(req *placev5polygon.PolygonSearchRequest) (*placev5polygon.SearchResponse, error) {
+func (c *Client) PlaceV5Polygon(req *placev5polygon.PolygonSearchRequest) (*placev5polygon.PolygonSearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev5polygon.SearchResponse
+	var resp placev5polygon.PolygonSearchResponse
 	if err := c.DoRequest("v5/place/polygon", params, &resp); err != nil {
 		return nil, err
 	}
@@ -672,12 +672,12 @@ func (c *Client) PlaceV5Polygon(req *placev5polygon.PolygonSearchRequest) (*plac
 
 // PlaceV5AOI POI AOI查询API调用方法（v5）
 // 用于查询指定AOI区域内的POI
-func (c *Client) PlaceV5AOI(req *placev5aoi.AOISearchRequest) (*placev5aoi.SearchResponse, error) {
+func (c *Client) PlaceV5AOI(req *placev5aoi.AOISearchRequest) (*placev5aoi.AOISearchResponse, error) {
 	// 转换请求参数为map
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp placev5aoi.SearchResponse
+	var resp placev5aoi.AOISearchResponse
 	if err := c.DoRequest("v5/place/aoi", params, &resp); err != nil {
 		return nil, err
 	}
