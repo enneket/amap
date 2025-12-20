@@ -22,7 +22,7 @@ import (
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
-	ipconfig "github.com/enneket/amap/api/ipconfig"
+	ipconfigV3 "github.com/enneket/amap/api/ipconfig/v3"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
 	placev3id "github.com/enneket/amap/api/place/v3/id"
@@ -452,7 +452,7 @@ func (c *Client) TrafficIncident(req *trafficIncident.TrafficIncidentRequest) (*
 
 // IPConfig IP定位API调用方法
 // 支持通过IP地址查询地理位置信息，返回省份、城市、区县、ISP等信息
-func (c *Client) IPConfig(req *ipconfig.IPConfigRequest) (*ipconfig.IPConfigResponse, error) {
+func (c *Client) IPConfig(req *ipconfigV3.IPConfigRequest) (*ipconfigV3.IPConfigResponse, error) {
 	// 校验必填参数
 	if req.IP == "" {
 		return nil, amapErr.NewInvalidConfigError("IP定位：ip参数不能为空")
@@ -462,7 +462,7 @@ func (c *Client) IPConfig(req *ipconfig.IPConfigRequest) (*ipconfig.IPConfigResp
 	params := req.ToParams()
 
 	// 调用核心请求方法
-	var resp ipconfig.IPConfigResponse
+	var resp ipconfigV3.IPConfigResponse
 	if err := c.DoRequest("ip", params, &resp); err != nil {
 		return nil, err
 	}

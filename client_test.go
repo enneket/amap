@@ -22,7 +22,8 @@ import (
 	geoCode "github.com/enneket/amap/api/geo_code"
 	grasproad "github.com/enneket/amap/api/grasproad"
 	"github.com/enneket/amap/api/inputtips"
-	ipconfig "github.com/enneket/amap/api/ipconfig"
+	"github.com/enneket/amap/api/ipconfig/v3"
+	ipconfigV3 "github.com/enneket/amap/api/ipconfig/v3"
 	placev3aoi "github.com/enneket/amap/api/place/v3/aoi"
 	placev3around "github.com/enneket/amap/api/place/v3/around"
 	placev3id "github.com/enneket/amap/api/place/v3/id"
@@ -3064,7 +3065,7 @@ func TestIPConfig_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// 3. 创建请求参数
-	req := &ipconfig.IPConfigRequest{
+	req := &ipconfigV3.IPConfigRequest{
 		IP: "114.114.114.114",
 	}
 
