@@ -591,7 +591,7 @@ func TestDoRequest_InvalidJSON(t *testing.T) {
 	var resp struct {
 		Result string `json:"result"` // 期望string类型，但实际是object
 	}
-	err = client.DoRequest(http.MethodGet, "test/path", nil, &resp)
+	err = client.DoRequest(http.MethodGet, mockServer.URL+"/test/path", nil, &resp)
 
 	// 4. 验证结果
 	assert.Error(t, err) // 应该返回JSON解析错误
@@ -803,15 +803,15 @@ func TestReGeocode_Success(t *testing.T) {
 	assert.Equal(t, "北京市朝阳区望京街道望京SOHO T1", resp.ReGeocode.FormattedAddress)
 	assert.Equal(t, "中国", resp.ReGeocode.AddressComponent.Country)
 	assert.Equal(t, "北京市", resp.ReGeocode.AddressComponent.Province)
-	assert.Equal(t, "北京市", resp.ReGeocode.AddressComponent.City)
+	assert.Equal(t, "北京市", resp.ReGeocode.AddressComponent.City[0])
 	assert.Equal(t, "110000", resp.ReGeocode.AddressComponent.Citycode)
 	assert.Equal(t, "朝阳区", resp.ReGeocode.AddressComponent.District)
 	assert.Equal(t, "110105", resp.ReGeocode.AddressComponent.Adcode)
 	assert.Equal(t, "望京街道", resp.ReGeocode.AddressComponent.Township)
 	assert.Equal(t, "110105028", resp.ReGeocode.AddressComponent.Towncode)
-	assert.Equal(t, "望京街", resp.ReGeocode.AddressComponent.Street)
-	assert.Equal(t, "8号", resp.ReGeocode.AddressComponent.Number)
-	assert.Equal(t, "望京街道", resp.ReGeocode.Township)
+	assert.Equal(t, "望京街", resp.ReGeocode.AddressComponent.StreetNumber.Street)
+	assert.Equal(t, "8号", resp.ReGeocode.AddressComponent.StreetNumber.Number)
+	assert.Equal(t, "望京街道", resp.ReGeocode.AddressComponent.Township)
 }
 
 // TestReGeocode_MissingLocation 测试ReGeocode方法缺少必填参数Location
@@ -4575,8 +4575,8 @@ func TestHardwarePositionV5_Success(t *testing.T) {
 	assert.Equal(t, "test_trace_id_123456", resp.TraceID)
 }
 
-// TestBusStationID 测试公交站ID查询接口
-func TestBusStationID(t *testing.T) {
+// TestBusStationID_Success 测试公交站ID查询接口正常请求成功
+func TestBusStationID_Success(t *testing.T) {
 	// 创建模拟服务器
 	server := mockResponse(http.StatusOK, `{
 		"status": "1",
@@ -4625,8 +4625,76 @@ func TestBusStationID(t *testing.T) {
 	assert.Len(t, resp.Lines, 1)
 }
 
-// TestBusStationKeyword 测试公交站关键字查询接口
-func TestBusStationKeyword(t *testing.T) {
+// TestBusStationID_MissingID 测试公交站ID查询接口缺少必填参数ID
+func TestBusStationID_MissingID(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少ID参数
+	resp, err := client.BusStationID(&busStationID.StationIDRequest{
+		City: "北京", // 缺少ID参数
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "id参数不能为空")
+}
+
+// TestBusStationID_MissingCity 测试公交站ID查询接口缺少必填参数City
+func TestBusStationID_MissingCity(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少City参数
+	resp, err := client.BusStationID(&busStationID.StationIDRequest{
+		ID: "123456", // 缺少City参数
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestBusStationID_APIError 测试公交站ID查询接口API返回错误
+func TestBusStationID_APIError(t *testing.T) {
+	// 创建模拟服务器，返回API错误
+	server := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求
+	resp, err := client.BusStationID(&busStationID.StationIDRequest{
+		ID:   "123456",
+		City: "北京",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestBusStationKeyword_Success 测试公交站关键字查询接口正常请求成功
+func TestBusStationKeyword_Success(t *testing.T) {
 	// 创建模拟服务器
 	server := mockResponse(http.StatusOK, `{
 		"status": "1",
@@ -4670,8 +4738,82 @@ func TestBusStationKeyword(t *testing.T) {
 	assert.Len(t, resp.Stations, 1)
 }
 
-// TestBusLineID 测试公交路线ID查询接口
-func TestBusLineID(t *testing.T) {
+// TestBusStationKeyword_MissingKeywords 测试公交站关键字查询接口缺少必填参数Keywords
+func TestBusStationKeyword_MissingKeywords(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少Keywords参数
+	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
+		City:   "北京",
+		Page:   "1",
+		Offset: "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestBusStationKeyword_MissingCity 测试公交站关键字查询接口缺少必填参数City
+func TestBusStationKeyword_MissingCity(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少City参数
+	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
+		Keywords: "测试站点",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestBusStationKeyword_APIError 测试公交站关键字查询接口API返回错误
+func TestBusStationKeyword_APIError(t *testing.T) {
+	// 创建模拟服务器，返回API错误
+	server := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求
+	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
+		Keywords: "测试站点",
+		City:     "北京",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestBusLineID_Success 测试公交路线ID查询接口正常请求成功
+func TestBusLineID_Success(t *testing.T) {
 	// 创建模拟服务器
 	server := mockResponse(http.StatusOK, `{
 		"status": "1",
@@ -4717,8 +4859,76 @@ func TestBusLineID(t *testing.T) {
 	assert.Len(t, resp.Stations, 2)
 }
 
-// TestBusLineKeyword 测试公交路线关键字查询接口
-func TestBusLineKeyword(t *testing.T) {
+// TestBusLineID_MissingID 测试公交路线ID查询接口缺少必填参数ID
+func TestBusLineID_MissingID(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少ID参数
+	resp, err := client.BusLineID(&busLineID.LineIDRequest{
+		City: "北京", // 缺少ID参数
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "id参数不能为空")
+}
+
+// TestBusLineID_MissingCity 测试公交路线ID查询接口缺少必填参数City
+func TestBusLineID_MissingCity(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少City参数
+	resp, err := client.BusLineID(&busLineID.LineIDRequest{
+		ID: "line123", // 缺少City参数
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestBusLineID_APIError 测试公交路线ID查询接口API返回错误
+func TestBusLineID_APIError(t *testing.T) {
+	// 创建模拟服务器，返回API错误
+	server := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求
+	resp, err := client.BusLineID(&busLineID.LineIDRequest{
+		ID:   "line123",
+		City: "北京",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestBusLineKeyword_Success 测试公交路线关键字查询接口正常请求成功
+func TestBusLineKeyword_Success(t *testing.T) {
 	// 创建模拟服务器
 	server := mockResponse(http.StatusOK, `{
 		"status": "1",
@@ -4762,4 +4972,78 @@ func TestBusLineKeyword(t *testing.T) {
 	assert.Equal(t, "10000", resp.InfoCode)
 	assert.Equal(t, "1", resp.Count)
 	assert.Len(t, resp.Lines, 1)
+}
+
+// TestBusLineKeyword_MissingKeywords 测试公交路线关键字查询接口缺少必填参数Keywords
+func TestBusLineKeyword_MissingKeywords(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少Keywords参数
+	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
+		City:   "北京",
+		Page:   "1",
+		Offset: "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestBusLineKeyword_MissingCity 测试公交路线关键字查询接口缺少必填参数City
+func TestBusLineKeyword_MissingCity(t *testing.T) {
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求，缺少City参数
+	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
+		Keywords: "测试线路",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestBusLineKeyword_APIError 测试公交路线关键字查询接口API返回错误
+func TestBusLineKeyword_APIError(t *testing.T) {
+	// 创建模拟服务器，返回API错误
+	server := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer server.Close()
+
+	// 创建客户端
+	client, _ := NewClient(&Config{
+		Key: "test_key",
+	})
+
+	// 发送请求
+	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
+		Keywords: "测试线路",
+		City:     "北京",
+		Page:     "1",
+		Offset:   "20",
+	})
+
+	// 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
 }
