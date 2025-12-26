@@ -5,6 +5,7 @@ import (
 )
 
 // WalkingResponse 步行路径规划响应
+// 文档：https://lbs.amap.com/api/webservice/guide/api/direction#t4
 type WalkingResponse struct {
 	amapType.BaseResponse       // 继承基础响应（Status/Info/InfoCode）
 	Route                 Route `json:"route"` // 路线信息

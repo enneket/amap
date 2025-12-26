@@ -14,6 +14,7 @@ import (
 	busStationKeyword "github.com/enneket/amap/api/bus/station_keyword"
 	convert "github.com/enneket/amap/api/convert"
 	bicyclingV1 "github.com/enneket/amap/api/direction/v1/bicycling"
+	busV1 "github.com/enneket/amap/api/direction/v1/bus"
 	drivingV1 "github.com/enneket/amap/api/direction/v1/driving"
 	walkingV1 "github.com/enneket/amap/api/direction/v1/walking"
 	bicyclingV2 "github.com/enneket/amap/api/direction/v2/bicycling"
@@ -253,6 +254,32 @@ func (c *Client) Bicycling(req *bicyclingV1.BicyclingRequest) (*bicyclingV1.Bicy
 	// 调用核心请求方法
 	var resp bicyclingV1.BicyclingResponse
 	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/bicycling", params, &resp); err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// Bus 公交路线规划API调用方法（v1）
+func (c *Client) Bus(req *busV1.BusRequest) (*busV1.BusResponse, error) {
+	// 校验必填参数
+	if req.Origin == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划：origin参数不能为空")
+	}
+	if req.Destination == "" {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划：destination参数不能为空")
+	}
+	// 简单校验经纬度格式
+	if !strings.Contains(req.Origin, ",") || !strings.Contains(req.Destination, ",") {
+		return nil, amapErr.NewInvalidConfigError("公交路径规划：坐标格式错误，应为\"经度,纬度\"")
+	}
+
+	// 转换请求参数为map
+	params := req.ToParams()
+
+	// 调用核心请求方法
+	var resp busV1.BusResponse
+	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/transit/integrated", params, &resp); err != nil {
 		return nil, err
 	}
 
