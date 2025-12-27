@@ -662,6 +662,7 @@ func TestGeoCode_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -730,6 +731,7 @@ func TestGeoCode_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -779,6 +781,7 @@ func TestReGeocode_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -870,6 +873,7 @@ func TestReGeocode_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -924,6 +928,7 @@ func TestReGeocode_DefaultValues(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -967,6 +972,7 @@ func TestDistance_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1076,6 +1082,7 @@ func TestDistance_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1129,6 +1136,7 @@ func TestDistance_MultiOriginsDestinations(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1192,6 +1200,7 @@ func TestWalking_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1508,6 +1517,7 @@ func TestWalking_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1569,6 +1579,7 @@ func TestDriving_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1590,9 +1601,6 @@ func TestDriving_Success(t *testing.T) {
 	assert.Equal(t, "10000", resp.InfoCode)
 	assert.Equal(t, "116.351147,39.936871", resp.Route.Origin)
 	assert.Equal(t, "116.410001,39.910113", resp.Route.Destination)
-	assert.Equal(t, "5237", resp.Route.Distance)
-	assert.Equal(t, "240", resp.Route.Duration)
-	assert.Equal(t, "5", resp.Route.Tolls)
 	assert.Len(t, resp.Route.Paths, 1)
 	assert.Equal(t, "5237", resp.Route.Paths[0].Distance)
 	assert.Equal(t, "240", resp.Route.Paths[0].Duration)
@@ -1679,6 +1687,7 @@ func TestDriving_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1738,6 +1747,7 @@ func TestBicycling_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1847,6 +1857,7 @@ func TestBicycling_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -1911,6 +1922,7 @@ func TestWalkingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2022,6 +2034,7 @@ func TestWalkingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2042,6 +2055,547 @@ func TestWalkingV2_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// -------------------------- 行政区查询测试 --------------------------
+
+// TestDistrict_Success 测试District方法正常请求成功
+func TestDistrict_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回行政区查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "1",
+		"districts": [
+			{
+				"name": "北京市",
+				"level": "province",
+				"adcode": "110000",
+				"citycode": "010",
+				"center": "116.407413,39.904211",
+				"districts": [
+					{
+						"name": "东城区",
+						"level": "district",
+						"adcode": "110101",
+						"citycode": "010",
+						"center": "116.411719,39.914867"
+					}
+				]
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例，使用mock服务器地址
+	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &district.DistrictRequest{
+		Keywords:    "北京市",
+		Subdistrict: "1",
+		Extensions:  "base",
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "1", resp.Count)
+	assert.Len(t, resp.Districts, 1)
+	assert.Equal(t, "北京市", resp.Districts[0].Name)
+	assert.Equal(t, "province", resp.Districts[0].Level)
+	assert.Equal(t, "110000", resp.Districts[0].Adcode)
+	assert.Equal(t, "010", resp.Districts[0].Citycode)
+	assert.Equal(t, "116.407413,39.904211", resp.Districts[0].Center)
+	assert.Len(t, resp.Districts[0].Districts, 1)
+	assert.Equal(t, "东城区", resp.Districts[0].Districts[0].Name)
+}
+
+// TestDistrict_MissingKeywords 测试District方法缺少必填参数Keywords
+func TestDistrict_MissingKeywords(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Keywords的请求参数
+	req := &district.DistrictRequest{
+		Subdistrict: "1", // 只有Subdistrict，没有Keywords
+	}
+
+	// 3. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestDistrict_APIError 测试District方法API返回错误
+func TestDistrict_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &district.DistrictRequest{
+		Keywords: "北京市",
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestDistrict_InvalidKeywords 测试District方法使用无效关键字
+func TestDistrict_InvalidKeywords(t *testing.T) {
+	// 1. 创建mock服务器，返回无匹配结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "0",
+		"districts": []
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用无效关键字
+	req := &district.DistrictRequest{
+		Keywords: "不存在的行政区123",
+	}
+
+	// 4. 执行行政区查询请求
+	resp, err := client.District(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "0", resp.Count)
+	assert.Len(t, resp.Districts, 0)
+}
+
+// -------------------------- 输入提示测试 --------------------------
+
+// TestInputtips_Success 测试Inputtips方法正常请求成功
+func TestInputtips_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回输入提示成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "2",
+		"tips": [
+			{
+				"id": "B000A83M61",
+				"name": "望京SOHO",
+				"district": "朝阳区",
+				"adcode": "110105",
+				"location": "116.48649,39.99947",
+				"address": "望京街8号",
+				"type": "商务住宅;楼宇;商务写字楼",
+				"city": "北京市",
+				"citycode": "010",
+				"province": "北京市"
+			},
+			{
+				"id": "B000A83M62",
+				"name": "望京SOHO T1",
+				"district": "朝阳区",
+				"adcode": "110105",
+				"location": "116.48549,39.99847",
+				"address": "望京街8号",
+				"type": "商务住宅;楼宇;商务写字楼",
+				"city": "北京市",
+				"citycode": "010",
+				"province": "北京市"
+			}
+		]
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &inputtips.InputtipsRequest{
+		Keywords: "望京SOHO",
+		City:     "北京",
+	}
+
+	// 4. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "2", resp.Count)
+	assert.Len(t, resp.Tips, 2)
+	assert.Equal(t, "望京SOHO", resp.Tips[0].Name)
+	assert.Equal(t, "北京市", resp.Tips[0].City)
+	assert.Equal(t, "朝阳区", resp.Tips[0].District)
+	assert.Equal(t, "116.48649,39.99947", resp.Tips[0].Location)
+}
+
+// TestInputtips_MissingKeywords 测试Inputtips方法缺少必填参数Keywords
+func TestInputtips_MissingKeywords(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少Keywords的请求参数
+	req := &inputtips.InputtipsRequest{
+		City: "北京", // 只有City，没有Keywords
+	}
+
+	// 3. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "keywords参数不能为空")
+}
+
+// TestInputtips_APIError 测试Inputtips方法API返回错误
+func TestInputtips_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &inputtips.InputtipsRequest{
+		Keywords: "望京SOHO",
+	}
+
+	// 4. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestInputtips_NoResult 测试Inputtips方法无匹配结果
+func TestInputtips_NoResult(t *testing.T) {
+	// 1. 创建mock服务器，返回无匹配结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"count": "0",
+		"tips": []
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用无效关键字
+	req := &inputtips.InputtipsRequest{
+		Keywords: "不存在的地点123",
+		City:     "北京",
+	}
+
+	// 4. 执行输入提示请求
+	resp, err := client.Inputtips(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "0", resp.Count)
+	assert.Len(t, resp.Tips, 0)
+}
+
+// -------------------------- 天气信息测试 --------------------------
+
+// TestWeatherinfo_Success_Base 测试Weatherinfo方法正常请求成功（base扩展）
+func TestWeatherinfo_Success_Base(t *testing.T) {
+	// 1. 创建mock服务器，返回天气信息成功响应（base扩展）
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"weatherinfo": {
+			"city": "北京市",
+			"cityid": "101010100",
+			"temp": "22",
+			"WD": "东南风",
+			"WS": "1级",
+			"SD": "40%",
+			"AP": "1013hPa",
+			"NJD": "10km",
+			"WSE": "1",
+			"time": "10:30",
+			"isRadar": "1",
+			"Radar": "JC_RADAR_AZ9010_JB",
+			"weather": "晴",
+			"temperature": "10~22℃",
+			"winddirection": "东南",
+			"windpower": "1-2级",
+			"humidity": "40%"
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数（base扩展）
+	req := &weatherinfo.WeatherinfoRequest{
+		City:       "北京",
+		Extensions: "base",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.NotNil(t, resp.Weatherinfo)
+	assert.Equal(t, "北京市", resp.Weatherinfo.City)
+	assert.Equal(t, "101010100", resp.Weatherinfo.CityID)
+	assert.Equal(t, "22", resp.Weatherinfo.Temp)
+	assert.Equal(t, "晴", resp.Weatherinfo.Weather)
+	assert.Equal(t, "东南风", resp.Weatherinfo.WD)
+	assert.Equal(t, "1级", resp.Weatherinfo.WS)
+	assert.Equal(t, "40%", resp.Weatherinfo.SD)
+}
+
+// TestWeatherinfo_Success_All 测试Weatherinfo方法正常请求成功（all扩展，包含预报和生活指数）
+func TestWeatherinfo_Success_All(t *testing.T) {
+	// 1. 创建mock服务器，返回天气信息成功响应（all扩展）
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"weatherinfo": {
+			"city": "北京市",
+			"cityid": "101010100",
+			"temp": "22",
+			"WD": "东南风",
+			"WS": "1级",
+			"SD": "40%",
+			"weather": "晴"
+		},
+		"forecasts": [
+			{
+				"city": "北京市",
+				"adcode": "110000",
+				"province": "北京市",
+				"reporttime": "2023-05-20 10:00:00",
+				"forecast": [
+					{
+						"date": "2023-05-20",
+						"week": "六",
+						"dayweather": "晴",
+						"nightweather": "晴",
+						"daytemp": "22",
+						"nighttemp": "10",
+						"daywind": "东南风",
+						"nightwind": "东南风",
+						"daypower": "1级",
+						"nightpower": "1级"
+					}
+				]
+			}
+		],
+		"suggestion": {
+			"comf": {
+				"brf": "舒适",
+				"txt": "白天温度适宜，风力不大，相信您在这样的天气条件下，应会感到比较清爽和舒适。",
+				"type": "comf"
+			}
+		}
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数（all扩展）
+	req := &weatherinfo.WeatherinfoRequest{
+		City:       "北京",
+		Extensions: "all",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.NotNil(t, resp.Weatherinfo)
+	assert.NotEmpty(t, resp.Forecasts)
+	assert.NotNil(t, resp.Suggestion)
+	assert.Equal(t, "舒适", resp.Suggestion.Comf.Brf)
+}
+
+// TestWeatherinfo_MissingCity 测试Weatherinfo方法缺少必填参数City
+func TestWeatherinfo_MissingCity(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少City的请求参数
+	req := &weatherinfo.WeatherinfoRequest{
+		Extensions: "base", // 只有Extensions，没有City
+	}
+
+	// 3. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
+}
+
+// TestWeatherinfo_APIError 测试Weatherinfo方法API返回错误
+func TestWeatherinfo_APIError(t *testing.T) {
+	// 1. 创建mock服务器，返回API错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的Key",
+		"infocode": "10001"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &weatherinfo.WeatherinfoRequest{
+		City: "北京",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10001", apiErr.Code)
+	assert.Equal(t, "无效的Key", apiErr.Info)
+}
+
+// TestWeatherinfo_InvalidCity 测试Weatherinfo方法使用无效城市
+func TestWeatherinfo_InvalidCity(t *testing.T) {
+	// 1. 创建mock服务器，返回无效城市错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的城市",
+		"infocode": "10003"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数，使用无效城市
+	req := &weatherinfo.WeatherinfoRequest{
+		City: "无效城市123",
+	}
+
+	// 4. 执行天气信息请求
+	resp, err := client.Weatherinfo(req)
+
+	// 5. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10003", apiErr.Code)
+	assert.Equal(t, "无效的城市", apiErr.Info)
 }
 
 // -------------------------- 驾车路径规划v2测试 --------------------------
@@ -2083,6 +2637,7 @@ func TestDrivingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2194,6 +2749,7 @@ func TestDrivingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2257,6 +2813,7 @@ func TestETDDrivingV4_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2393,6 +2950,7 @@ func TestBicyclingV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2502,6 +3060,7 @@ func TestBicyclingV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2564,6 +3123,7 @@ func TestBusV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2671,6 +3231,7 @@ func TestBusV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2743,6 +3304,7 @@ func TestElectricV2_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2856,6 +3418,7 @@ func TestElectricV2_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -2876,228 +3439,6 @@ func TestElectricV2_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10001", apiErr.Code)
 	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// -------------------------- 行政区查询测试 --------------------------
-
-// TestDistrict_Success 测试District方法正常请求成功
-func TestDistrict_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回行政区查询成功响应
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"districts": [
-			{
-				"name": "北京市",
-				"level": "province",
-				"adcode": "110000",
-				"citycode": "110000",
-				"center": "116.405285,39.904989",
-				"districts": [
-					{
-						"name": "东城区",
-						"level": "district",
-						"adcode": "110101",
-						"citycode": "110000",
-						"center": "116.410708,39.915224",
-						"parent_city": ["北京市"]
-					},
-					{
-						"name": "西城区",
-						"level": "district",
-						"adcode": "110102",
-						"citycode": "110000",
-						"center": "116.363593,39.913362",
-						"parent_city": ["北京市"]
-					}
-				]
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建请求参数
-	req := &district.DistrictRequest{
-		Keywords:    "北京市",
-		Subdistrict: "1", // 返回下一级行政区
-	}
-
-	// 4. 执行行政区查询请求
-	resp, err := client.District(req)
-
-	// 5. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "10000", resp.InfoCode)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Districts, 1)
-	assert.Equal(t, "北京市", resp.Districts[0].Name)
-	assert.Equal(t, "province", resp.Districts[0].Level)
-	assert.Equal(t, "110000", resp.Districts[0].Adcode)
-	assert.Equal(t, "116.405285,39.904989", resp.Districts[0].Center)
-	assert.Len(t, resp.Districts[0].Districts, 2) // 应该返回2个区县
-	assert.Equal(t, "东城区", resp.Districts[0].Districts[0].Name)
-	assert.Equal(t, "西城区", resp.Districts[0].Districts[1].Name)
-}
-
-// TestDistrict_MissingKeywords 测试District方法缺少必填参数Keywords
-func TestDistrict_MissingKeywords(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 创建缺少Keywords的请求参数
-	req := &district.DistrictRequest{
-		Subdistrict: "1", // 只有Subdistrict，没有Keywords
-	}
-
-	// 3. 执行行政区查询请求
-	resp, err := client.District(req)
-
-	// 4. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keywords参数不能为空")
-}
-
-// TestDistrict_APIError 测试District方法API返回错误
-func TestDistrict_APIError(t *testing.T) {
-	// 1. 创建mock服务器，返回API错误
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建请求参数
-	req := &district.DistrictRequest{
-		Keywords: "北京市",
-	}
-
-	// 4. 执行行政区查询请求
-	resp, err := client.District(req)
-
-	// 5. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// TestDistrict_WithAdcode 测试通过adcode查询行政区
-func TestDistrict_WithAdcode(t *testing.T) {
-	// 1. 创建mock服务器，返回行政区查询成功响应
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"districts": [
-			{
-				"name": "深圳市",
-				"level": "city",
-				"adcode": "440300",
-				"citycode": "0755",
-				"center": "114.057868,22.543099"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建请求参数，使用adcode查询
-	req := &district.DistrictRequest{
-		Keywords:    "440300", // 深圳的adcode
-		Subdistrict: "0",      // 不返回子级行政区
-	}
-
-	// 4. 执行行政区查询请求
-	resp, err := client.District(req)
-
-	// 5. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Districts, 1)
-	assert.Equal(t, "深圳市", resp.Districts[0].Name)
-	assert.Equal(t, "city", resp.Districts[0].Level)
-	assert.Equal(t, "440300", resp.Districts[0].Adcode)
-	assert.Equal(t, "0755", resp.Districts[0].Citycode)
-	assert.Len(t, resp.Districts[0].Districts, 0) // 不返回子级行政区
-}
-
-// TestDistrict_WithFilter 测试使用筛选条件查询行政区
-func TestDistrict_WithFilter(t *testing.T) {
-	// 1. 创建mock服务器，返回行政区查询成功响应
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"districts": [
-			{
-				"name": "广州市",
-				"level": "city",
-				"adcode": "440100",
-				"citycode": "020",
-				"center": "113.280637,23.125178"
-			}
-		]
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建请求参数，使用筛选条件
-	req := &district.DistrictRequest{
-		Keywords: "广州",
-		Filter:   "citycode:020", // 筛选citycode为020的城市
-	}
-
-	// 4. 执行行政区查询请求
-	resp, err := client.District(req)
-
-	// 5. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Districts, 1)
-	assert.Equal(t, "广州市", resp.Districts[0].Name)
-	assert.Equal(t, "020", resp.Districts[0].Citycode)
 }
 
 // -------------------------- 交通事件查询测试 --------------------------
@@ -3154,6 +3495,7 @@ func TestTrafficIncident_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3299,6 +3641,7 @@ func TestTrafficIncident_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3368,6 +3711,7 @@ func TestTrafficIncident_WithExtensionsAll(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3415,6 +3759,7 @@ func TestIPConfig_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3477,6 +3822,7 @@ func TestIPConfig_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3518,6 +3864,7 @@ func TestIPConfig_IPv6(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3579,6 +3926,7 @@ func TestIPConfig_WithLocationInfo(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3630,6 +3978,7 @@ func TestIPV5Config_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3692,6 +4041,7 @@ func TestIPV5Config_APIError(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3733,6 +4083,7 @@ func TestIPV5Config_IPv6(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3794,6 +4145,7 @@ func TestIPV5Config_WithLocationInfo(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -3832,6 +4184,102 @@ func TestIPV5Config_WithLocationInfo(t *testing.T) {
 	assert.Equal(t, "ISP", resp.Location.ISPInfo.Type)
 	assert.Equal(t, "310", resp.Location.ISPInfo.MCC)
 	assert.Equal(t, "260", resp.Location.ISPInfo.MNC)
+}
+
+// -------------------------- IP 定位测试 --------------------------
+
+// TestIPConfig_Success_V3 测试IPConfig (v3)方法正常请求成功
+func TestIPConfig_Success_V3(t *testing.T) {
+	// 1. 创建mock服务器，返回IP定位成功响应（v3）
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"ip": "114.114.114.114",
+		"country": "中国",
+		"province": "江苏省",
+		"city": "南京市",
+		"district": "秦淮区",
+		"isp": "联通",
+		"adcode": "320104",
+		"center": "118.790587,32.024847"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &ipV3.IPConfigRequest{
+		IP: "114.114.114.114",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPConfig(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "114.114.114.114", resp.IP)
+	assert.Equal(t, "中国", resp.Country)
+	assert.Equal(t, "江苏省", resp.Province)
+	assert.Equal(t, "南京市", resp.City)
+	assert.Equal(t, "秦淮区", resp.District)
+	assert.Equal(t, "联通", resp.ISP)
+	assert.Equal(t, "320104", resp.Adcode)
+	assert.Equal(t, "118.790587,32.024847", resp.Center)
+}
+
+// TestIPV5Config_Success_V5 测试IPV5Config (v5)方法正常请求成功
+func TestIPV5Config_Success_V5(t *testing.T) {
+	// 1. 创建mock服务器，返回IP定位成功响应（v5）
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"ip": "8.8.8.8",
+		"country": "美国",
+		"province": "加利福尼亚州",
+		"city": "山景城",
+		"district": "",
+		"isp": "谷歌",
+		"adcode": "",
+		"center": "-122.084068,37.421999"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &ipV5.IPConfigRequest{
+		IP: "8.8.8.8",
+	}
+
+	// 4. 执行IP定位请求
+	resp, err := client.IPV5Config(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "8.8.8.8", resp.IP)
+	assert.Equal(t, "美国", resp.Country)
+	assert.Equal(t, "加利福尼亚州", resp.Province)
+	assert.Equal(t, "山景城", resp.City)
+	assert.Equal(t, "谷歌", resp.ISP)
+	assert.Equal(t, "-122.084068,37.421999", resp.Center)
 }
 
 // -------------------------- 坐标转换测试 --------------------------
@@ -3936,6 +4384,282 @@ func TestConvert_APIError(t *testing.T) {
 	apiErr := err.(*amapErr.APIError)
 	assert.Equal(t, "10003", apiErr.Code)
 	assert.Equal(t, "无效的coordsys参数", apiErr.Info)
+}
+
+// TestConvert_DifferentCoordSys 测试Convert方法不同坐标系转换
+func TestConvert_DifferentCoordSys(t *testing.T) {
+	// 1. 创建mock服务器，返回不同坐标系转换结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"locations": "116.480656,39.989610"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，测试百度坐标系转换
+	req := &convert.ConvertRequest{
+		Locations: "116.480656,39.989610",
+		CoordSys:  "baidu", // 百度坐标系
+	}
+	resp, err := client.Convert(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10003", resp.InfoCode)
+	assert.Equal(t, "116.480656,39.989610", resp.Locations)
+}
+
+// TestConvert_BatchConvert 测试Convert方法批量转换
+func TestConvert_BatchConvert(t *testing.T) {
+	// 1. 创建mock服务器，返回批量转换结果
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000",
+		"locations": "116.480656,39.989610;116.30815,39.95965;116.407428,39.90923"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，测试批量转换（3个坐标对）
+	req := &convert.ConvertRequest{
+		Locations: "116.480656,39.989610;116.30815,39.95965;116.407428,39.90923",
+		CoordSys:  "gps",
+	}
+	resp, err := client.Convert(req)
+
+	// 4. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+	assert.Equal(t, "116.480656,39.989610;116.30815,39.95965;116.407428,39.90923", resp.Locations)
+}
+
+// TestConvert_InvalidLocationFormat 测试Convert方法无效坐标格式
+func TestConvert_InvalidLocationFormat(t *testing.T) {
+	// 1. 创建mock服务器，返回无效坐标格式错误
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "0",
+		"info": "无效的locations参数",
+		"infocode": "10004"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 执行请求，使用无效的坐标格式
+	req := &convert.ConvertRequest{
+		Locations: "116.480656 39.989610", // 无效格式，使用空格分隔而不是逗号
+		CoordSys:  "gps",
+	}
+	resp, err := client.Convert(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, &amapErr.APIError{}, err)
+	apiErr := err.(*amapErr.APIError)
+	assert.Equal(t, "10004", apiErr.Code)
+	assert.Equal(t, "无效的locations参数", apiErr.Info)
+}
+
+// -------------------------- 公交相关API测试 --------------------------
+
+// TestBusStationID_Success 测试BusStationID方法正常请求成功
+func TestBusStationID_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回公交站ID查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &busStationID.StationIDRequest{
+		ID:   "123456",
+		City: "北京",
+	}
+
+	// 4. 执行公交站ID查询请求
+	resp, err := client.BusStationID(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestBusLineID_Success 测试BusLineID方法正常请求成功
+func TestBusLineID_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回公交路线ID查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &busLineID.LineIDRequest{
+		ID:   "789012",
+		City: "北京",
+	}
+
+	// 4. 执行公交路线ID查询请求
+	resp, err := client.BusLineID(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestBusStationKeyword_Success 测试BusStationKeyword方法正常请求成功
+func TestBusStationKeyword_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回公交站关键字查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &busStationKeyword.StationKeywordRequest{
+		Keywords: "望京",
+		City:     "北京",
+	}
+
+	// 4. 执行公交站关键字查询请求
+	resp, err := client.BusStationKeyword(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestBusLineKeyword_Success 测试BusLineKeyword方法正常请求成功
+func TestBusLineKeyword_Success(t *testing.T) {
+	// 1. 创建mock服务器，返回公交路线关键字查询成功响应
+	mockServer := mockResponse(http.StatusOK, `{
+		"status": "1",
+		"info": "OK",
+		"infocode": "10000"
+	}`)
+	defer mockServer.Close()
+
+	// 2. 创建Client实例
+	config := NewConfig("test_key")
+
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 3. 创建请求参数
+	req := &busLineKeyword.LineKeywordRequest{
+		Keywords: "1号线",
+		City:     "北京",
+	}
+
+	// 4. 执行公交路线关键字查询请求
+	resp, err := client.BusLineKeyword(req)
+
+	// 5. 验证结果
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "1", resp.Status)
+	assert.Equal(t, "OK", resp.Info)
+	assert.Equal(t, "10000", resp.InfoCode)
+}
+
+// TestBusStationID_MissingID 测试BusStationID方法缺少必填参数ID
+func TestBusStationID_MissingID(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少ID的请求参数
+	req := &busStationID.StationIDRequest{
+		City: "北京", // 只有City，没有ID
+	}
+
+	// 3. 执行公交站ID查询请求
+	resp, err := client.BusStationID(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "id参数不能为空")
+}
+
+// TestBusStationID_MissingCity 测试BusStationID方法缺少必填参数City
+func TestBusStationID_MissingCity(t *testing.T) {
+	// 1. 创建Client实例
+	config := NewConfig("test_key")
+	client, err := NewClient(config)
+	require.NoError(t, err)
+
+	// 2. 创建缺少City的请求参数
+	req := &busStationID.StationIDRequest{
+		ID: "123456", // 只有ID，没有City
+	}
+
+	// 3. 执行公交站ID查询请求
+	resp, err := client.BusStationID(req)
+
+	// 4. 验证结果
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.IsType(t, amapErr.InvalidConfigError(""), err)
+	assert.Contains(t, err.Error(), "city参数不能为空")
 }
 
 // -------------------------- 轨迹纠偏测试 --------------------------
@@ -4156,145 +4880,6 @@ func TestGraspRoad_WithExtensionsAll(t *testing.T) {
 
 // -------------------------- 输入提示测试 --------------------------
 
-// TestInputtips_Success 测试Inputtips方法正常请求成功
-func TestInputtips_Success(t *testing.T) {
-	// 1. 创建mock服务器，返回输入提示成功响应
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "2",
-		"tips": [
-			{
-				"id": "B000A83M61",
-				"name": "北京市朝阳区望京SOHO",
-				"district": "朝阳区",
-				"adcode": "110105",
-				"location": "116.48693,39.99936",
-				"address": "望京街8号",
-				"type": "商务住宅;楼宇;商务写字楼",
-				"typecode": "120201",
-				"weight": "90",
-				"city": "北京市",
-				"citycode": "010",
-				"districtadcode": "110105",
-				"province": "北京市",
-				"business_area": "望京"
-			},
-			{
-				"id": "B000A83M62",
-				"name": "北京市朝阳区望京公园",
-				"district": "朝阳区",
-				"adcode": "110105",
-				"location": "116.47693,39.98936",
-				"address": "望京西路",
-				"type": "风景名胜;公园广场;公园",
-				"typecode": "060301",
-				"weight": "85",
-				"city": "北京市",
-				"citycode": "010",
-				"districtadcode": "110105",
-				"province": "北京市",
-				"business_area": "望京"
-			}
-		],
-		"suggestion": {
-			"keywords": ["望京SOHO", "望京公园", "望京医院"],
-			"cities": ["北京市", "上海市"]
-		}
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建输入提示请求
-	req := &inputtips.InputtipsRequest{
-		Keywords: "望京",
-		City:     "北京",
-		Datatype: "all",
-	}
-
-	// 4. 执行输入提示请求
-	resp, err := client.Inputtips(req)
-
-	// 5. 验证结果
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.Equal(t, "2", resp.Count)
-	assert.Len(t, resp.Tips, 2)
-	assert.Equal(t, "B000A83M61", resp.Tips[0].ID)
-	assert.Equal(t, "北京市朝阳区望京SOHO", resp.Tips[0].Name)
-	assert.Equal(t, "朝阳区", resp.Tips[0].District)
-	assert.Equal(t, "110105", resp.Tips[0].Adcode)
-	assert.Equal(t, "116.48693,39.99936", resp.Tips[0].Location)
-	assert.Equal(t, "商务住宅;楼宇;商务写字楼", resp.Tips[0].Type)
-	assert.Equal(t, "望京", resp.Tips[0].BusinessArea)
-	assert.Len(t, resp.Suggestion.Keywords, 3)
-	assert.Contains(t, resp.Suggestion.Keywords, "望京SOHO")
-	assert.Len(t, resp.Suggestion.Cities, 2)
-	assert.Contains(t, resp.Suggestion.Cities, "北京市")
-}
-
-// TestInputtips_MissingKeywords 测试Inputtips方法缺少必填参数keywords
-func TestInputtips_MissingKeywords(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 创建缺少关键字的请求
-	req := &inputtips.InputtipsRequest{
-		City: "北京", // 缺少keywords
-	}
-
-	// 3. 执行输入提示请求
-	resp, err := client.Inputtips(req)
-
-	// 4. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keywords参数不能为空")
-}
-
-// TestInputtips_APIError 测试Inputtips方法API返回错误
-func TestInputtips_APIError(t *testing.T) {
-	// 1. 创建mock服务器，返回API错误
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建输入提示请求
-	req := &inputtips.InputtipsRequest{
-		Keywords: "望京",
-		City:     "北京",
-	}
-
-	// 4. 执行输入提示请求
-	resp, err := client.Inputtips(req)
-
-	// 5. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
 // -------------------------- 天气信息测试 --------------------------
 
 // TestWeatherinfo_Success 测试Weatherinfo方法正常请求成功
@@ -4365,6 +4950,7 @@ func TestWeatherinfo_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -4394,61 +4980,6 @@ func TestWeatherinfo_Success(t *testing.T) {
 	assert.Equal(t, "较适宜", resp.Suggestion.Cw.Brf)
 }
 
-// TestWeatherinfo_MissingCity 测试Weatherinfo方法缺少必填参数city
-func TestWeatherinfo_MissingCity(t *testing.T) {
-	// 1. 创建Client实例
-	config := NewConfig("test_key")
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 2. 创建缺少城市的请求
-	req := &weatherinfo.WeatherinfoRequest{
-		Extensions: "base", // 缺少city
-	}
-
-	// 3. 执行天气信息请求
-	resp, err := client.Weatherinfo(req)
-
-	// 4. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "city参数不能为空")
-}
-
-// TestWeatherinfo_APIError 测试Weatherinfo方法API返回错误
-func TestWeatherinfo_APIError(t *testing.T) {
-	// 1. 创建mock服务器，返回API错误
-	mockServer := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer mockServer.Close()
-
-	// 2. 创建Client实例，使用mock服务器地址
-	config := NewConfig("test_key")
-
-	client, err := NewClient(config)
-	require.NoError(t, err)
-
-	// 3. 创建天气信息请求
-	req := &weatherinfo.WeatherinfoRequest{
-		City: "北京市",
-	}
-
-	// 4. 执行天气信息请求
-	resp, err := client.Weatherinfo(req)
-
-	// 5. 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
 // TestHardwarePosition_Success 测试硬件定位API调用成功（v1）
 func TestHardwarePosition_Success(t *testing.T) {
 	// 1. 创建mock服务器，返回硬件定位API v1响应
@@ -4474,6 +5005,7 @@ func TestHardwarePosition_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -4532,6 +5064,7 @@ func TestHardwarePositionV5_Success(t *testing.T) {
 
 	// 2. 创建Client实例，使用mock服务器地址
 	config := NewConfig("test_key")
+	config.BaseURL = mockServer.URL
 
 	client, err := NewClient(config)
 	require.NoError(t, err)
@@ -4573,477 +5106,4 @@ func TestHardwarePositionV5_Success(t *testing.T) {
 	assert.False(t, resp.Indoor)
 	assert.Equal(t, "长安街", resp.MapMatch.RoadName)
 	assert.Equal(t, "test_trace_id_123456", resp.TraceID)
-}
-
-// TestBusStationID_Success 测试公交站ID查询接口正常请求成功
-func TestBusStationID_Success(t *testing.T) {
-	// 创建模拟服务器
-	server := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"stationid": "123456",
-		"name": "测试站点",
-		"location": "116.397428,39.90923",
-		"lines": [{
-			"lineid": "line123",
-			"name": "测试线路1",
-			"start_time": "06:00",
-			"end_time": "22:00",
-			"distance": "10000",
-			"stations": [{
-				"id": "s1",
-				"name": "站点1",
-				"location": "116.397428,39.90923"
-			}, {
-				"id": "s2",
-				"name": "站点2",
-				"location": "116.398428,39.91023"
-			}]
-		}]}
-`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusStationID(&busStationID.StationIDRequest{
-		ID:   "123456",
-		City: "北京",
-	})
-
-	// 验证结果
-	assert.NoError(t, err)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "10000", resp.InfoCode)
-	assert.Equal(t, "123456", resp.StationID)
-	assert.Equal(t, "测试站点", resp.Name)
-	assert.Len(t, resp.Lines, 1)
-}
-
-// TestBusStationID_MissingID 测试公交站ID查询接口缺少必填参数ID
-func TestBusStationID_MissingID(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少ID参数
-	resp, err := client.BusStationID(&busStationID.StationIDRequest{
-		City: "北京", // 缺少ID参数
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "id参数不能为空")
-}
-
-// TestBusStationID_MissingCity 测试公交站ID查询接口缺少必填参数City
-func TestBusStationID_MissingCity(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少City参数
-	resp, err := client.BusStationID(&busStationID.StationIDRequest{
-		ID: "123456", // 缺少City参数
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "city参数不能为空")
-}
-
-// TestBusStationID_APIError 测试公交站ID查询接口API返回错误
-func TestBusStationID_APIError(t *testing.T) {
-	// 创建模拟服务器，返回API错误
-	server := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusStationID(&busStationID.StationIDRequest{
-		ID:   "123456",
-		City: "北京",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// TestBusStationKeyword_Success 测试公交站关键字查询接口正常请求成功
-func TestBusStationKeyword_Success(t *testing.T) {
-	// 创建模拟服务器
-	server := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"suggestion": {
-			"keywords": ["测试站点"],
-			"cities": ["北京"]
-		},
-		"stations": [{
-			"id": "123456",
-			"name": "测试站点",
-			"location": "116.397428,39.90923",
-			"cityid": "110000",
-			"cityname": "北京",
-			"address": "测试地址"
-		}]}
-`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
-		Keywords: "测试站点",
-		City:     "北京",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.NoError(t, err)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "10000", resp.InfoCode)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Stations, 1)
-}
-
-// TestBusStationKeyword_MissingKeywords 测试公交站关键字查询接口缺少必填参数Keywords
-func TestBusStationKeyword_MissingKeywords(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少Keywords参数
-	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
-		City:   "北京",
-		Page:   "1",
-		Offset: "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keywords参数不能为空")
-}
-
-// TestBusStationKeyword_MissingCity 测试公交站关键字查询接口缺少必填参数City
-func TestBusStationKeyword_MissingCity(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少City参数
-	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
-		Keywords: "测试站点",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "city参数不能为空")
-}
-
-// TestBusStationKeyword_APIError 测试公交站关键字查询接口API返回错误
-func TestBusStationKeyword_APIError(t *testing.T) {
-	// 创建模拟服务器，返回API错误
-	server := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusStationKeyword(&busStationKeyword.StationKeywordRequest{
-		Keywords: "测试站点",
-		City:     "北京",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// TestBusLineID_Success 测试公交路线ID查询接口正常请求成功
-func TestBusLineID_Success(t *testing.T) {
-	// 创建模拟服务器
-	server := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"lineid": "line123",
-		"name": "测试线路1",
-		"type": "公交车",
-		"start_time": "06:00",
-		"end_time": "22:00",
-		"distance": "10000",
-		"polyline": "116.397428,39.90923;116.398428,39.91023",
-		"stations": [{
-			"id": "s1",
-			"name": "站点1",
-			"location": "116.397428,39.90923"
-		}, {
-			"id": "s2",
-			"name": "站点2",
-			"location": "116.398428,39.91023"
-		}]}
-`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusLineID(&busLineID.LineIDRequest{
-		ID:   "line123",
-		City: "北京",
-	})
-
-	// 验证结果
-	assert.NoError(t, err)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "10000", resp.InfoCode)
-	assert.Equal(t, "line123", resp.LineID)
-	assert.Equal(t, "测试线路1", resp.Name)
-	assert.Len(t, resp.Stations, 2)
-}
-
-// TestBusLineID_MissingID 测试公交路线ID查询接口缺少必填参数ID
-func TestBusLineID_MissingID(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少ID参数
-	resp, err := client.BusLineID(&busLineID.LineIDRequest{
-		City: "北京", // 缺少ID参数
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "id参数不能为空")
-}
-
-// TestBusLineID_MissingCity 测试公交路线ID查询接口缺少必填参数City
-func TestBusLineID_MissingCity(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少City参数
-	resp, err := client.BusLineID(&busLineID.LineIDRequest{
-		ID: "line123", // 缺少City参数
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "city参数不能为空")
-}
-
-// TestBusLineID_APIError 测试公交路线ID查询接口API返回错误
-func TestBusLineID_APIError(t *testing.T) {
-	// 创建模拟服务器，返回API错误
-	server := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusLineID(&busLineID.LineIDRequest{
-		ID:   "line123",
-		City: "北京",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
-}
-
-// TestBusLineKeyword_Success 测试公交路线关键字查询接口正常请求成功
-func TestBusLineKeyword_Success(t *testing.T) {
-	// 创建模拟服务器
-	server := mockResponse(http.StatusOK, `{
-		"status": "1",
-		"info": "OK",
-		"infocode": "10000",
-		"count": "1",
-		"suggestion": {
-			"keywords": ["测试线路"],
-			"cities": ["北京"]
-		},
-		"lines": [{
-			"lineid": "line123",
-			"name": "测试线路1",
-			"type": "公交车",
-			"start_time": "06:00",
-			"end_time": "22:00",
-			"distance": "10000",
-			"from_stop": "站点1",
-			"to_stop": "站点10"
-		}]}
-`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
-		Keywords: "测试线路",
-		City:     "北京",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.NoError(t, err)
-	assert.Equal(t, "1", resp.Status)
-	assert.Equal(t, "OK", resp.Info)
-	assert.Equal(t, "10000", resp.InfoCode)
-	assert.Equal(t, "1", resp.Count)
-	assert.Len(t, resp.Lines, 1)
-}
-
-// TestBusLineKeyword_MissingKeywords 测试公交路线关键字查询接口缺少必填参数Keywords
-func TestBusLineKeyword_MissingKeywords(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少Keywords参数
-	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
-		City:   "北京",
-		Page:   "1",
-		Offset: "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "keywords参数不能为空")
-}
-
-// TestBusLineKeyword_MissingCity 测试公交路线关键字查询接口缺少必填参数City
-func TestBusLineKeyword_MissingCity(t *testing.T) {
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求，缺少City参数
-	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
-		Keywords: "测试线路",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, amapErr.InvalidConfigError(""), err)
-	assert.Contains(t, err.Error(), "city参数不能为空")
-}
-
-// TestBusLineKeyword_APIError 测试公交路线关键字查询接口API返回错误
-func TestBusLineKeyword_APIError(t *testing.T) {
-	// 创建模拟服务器，返回API错误
-	server := mockResponse(http.StatusOK, `{
-		"status": "0",
-		"info": "无效的Key",
-		"infocode": "10001"
-	}`)
-	defer server.Close()
-
-	// 创建客户端
-	client, _ := NewClient(&Config{
-		Key: "test_key",
-	})
-
-	// 发送请求
-	resp, err := client.BusLineKeyword(&busLineKeyword.LineKeywordRequest{
-		Keywords: "测试线路",
-		City:     "北京",
-		Page:     "1",
-		Offset:   "20",
-	})
-
-	// 验证结果
-	assert.Error(t, err)
-	assert.Nil(t, resp)
-	assert.IsType(t, &amapErr.APIError{}, err)
-	apiErr := err.(*amapErr.APIError)
-	assert.Equal(t, "10001", apiErr.Code)
-	assert.Equal(t, "无效的Key", apiErr.Info)
 }

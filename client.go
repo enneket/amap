@@ -81,38 +81,48 @@ func (c *Client) DoRequest(method string, path string, params map[string]string,
 	if c.config.SecurityKey != "" {
 		allParams["sig"] = utils.Sign(allParams, c.config.SecurityKey)
 	}
-	// 3. 根据请求方法构建请求
+	// 3. 构建完整 URL：如果配置了 BaseURL，则替换 path 中的基础 URL
+	fullPath := path
+	if c.config.BaseURL != "" {
+		// 解析原始 path，提取相对路径
+		parsedURL, err := url.Parse(path)
+		if err == nil {
+			// 构建新的 URL：BaseURL + 相对路径
+			fullPath = c.config.BaseURL + parsedURL.Path
+		}
+	}
+	// 4. 根据请求方法构建请求
 	var req *http.Request
 	var err error
 	if method == http.MethodGet {
 		// GET 请求：参数拼接到 URL
-		fullURL := path + "?" + utils.EncodeParams(allParams, true)
+		fullURL := fullPath + "?" + utils.EncodeParams(allParams, true)
 		req, _ = http.NewRequest(method, fullURL, nil)
 	} else if method == http.MethodPost {
 		// POST 请求：参数作为请求体
-		req, _ = http.NewRequest(method, path, strings.NewReader(utils.EncodeParams(allParams, true)))
+		req, _ = http.NewRequest(method, fullPath, strings.NewReader(utils.EncodeParams(allParams, true)))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
 		return amapErr.NewInvalidConfigError("不支持的请求方法：" + method)
 	}
-	// 4. 设置请求头
+	// 5. 设置请求头
 	req.Header.Set("User-Agent", c.config.UserAgent)
-	// 5. 发送 HTTP 请求
+	// 6. 发送 HTTP 请求
 	rawResp, err := c.httpClient.Do(req)
 	if err != nil {
 		return amapErr.NewNetworkError(err.Error())
 	}
 	defer rawResp.Body.Close()
-	// 6. 解析响应（先解析基础响应，再解析业务响应）
+	// 7. 解析响应（先解析基础响应，再解析业务响应）
 	baseResp, _, err := amapType.ReadBaseResponse(rawResp.Body)
 	if err != nil {
 		return err
 	}
-	// 7. 校验 API 错误
+	// 8. 校验 API 错误
 	if baseResp.Status != "1" {
 		return amapErr.NewAPIError(baseResp.InfoCode, baseResp.Info)
 	}
-	// 8. 解析到业务响应结构体
+	// 9. 解析到业务响应结构体
 	return json.Unmarshal(baseResp.RawJSON, resp)
 }
 
@@ -227,7 +237,7 @@ func (c *Client) Driving(req *drivingV1.DrivingRequest) (*drivingV1.DrivingRespo
 
 	// 调用核心请求方法
 	var resp drivingV1.DrivingResponse
-	if err := c.DoRequest(http.MethodGet, "https://restapi.amap.com/v3/direction/driving", params, &resp); err != nil {
+	if err := c.DoRequest(http.MethodGet, drivingV1.API_PATH, params, &resp); err != nil {
 		return nil, err
 	}
 
